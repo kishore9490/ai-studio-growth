@@ -3,7 +3,6 @@ import {
   Background,
   Controls,
   Handle,
-  MiniMap,
   Position,
   ReactFlow,
   type Edge,
@@ -117,13 +116,13 @@ export function NetworkGraph({ nodes, edges, onSelectNode, onSelectEdge, height 
         }}
       >
         <Background gap={16} color="#e2e8f0" />
+        {/*
+          Controls give zoom, pan and fit-to-screen. A minimap is deliberately
+          omitted: at this graph size the whole network is already in view, and
+          the one XYFlow renders for these custom nodes paints no node
+          rectangles — an empty white box is worse than no box at all.
+        */}
         <Controls showInteractive={false} />
-        <MiniMap
-          pannable
-          zoomable
-          nodeColor={(node) => ((node.data as unknown as GraphNode)?.color as string) ?? '#94a3b8'}
-          className="!bg-white"
-        />
       </ReactFlow>
     </div>
   );
