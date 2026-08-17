@@ -23,7 +23,7 @@ import { humanize, relativeTime } from '../../lib/format';
  * candidate directory, consent-gated execution, restricted evidence.
  */
 export function PeoplePage() {
-  const { platform, workspace, organization, entitlements, run, runAsync } = usePlatform();
+  const { platform, workspace, organization, entitlements, execute } = usePlatform();
   const [open, setOpen] = useState(false);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -143,30 +143,9 @@ export function PeoplePage() {
                 if (!workspace) return;
                 setBusy(true);
                 try {
-                  await runAsync(async (p) => {
-                    const person = p.organizations.createPerson({ fullName, email, phone: phone || '0000000000' });
-                    const relationship = p.relationships.create({
-                      workspaceId: workspace.id,
-                      sourceOrganizationId: organization.id,
-                      targetType: 'PERSON',
-                      targetPersonId: person.id,
-                      type: 'CANDIDATE',
-                      policyId,
-                      lifecycle: 'VERIFICATION',
-                    });
-                    const request = p.verifications.create({
-                      workspaceId: workspace.id,
-                      requesterOrganizationId: organization.id,
-                      subjectType: 'PERSON',
-                      subjectPersonId: person.id,
-                      subjectName: person.fullName,
-                      relationshipId: relationship.id,
-                      relationshipType: 'CANDIDATE',
-                      policyId,
-                    });
-                    p.verifications.requestConsent({ verificationRequestId: request.id });
-                    return request;
-                  });
+                  await execute((c) =>
+                    c.createBgvRequest({ fullName, email, phone: phone || '0000000000', policyId }),
+                  );
                   setToast('BGV request created. It is blocked until the candidate grants consent.');
                   setOpen(false);
                   setFullName('');

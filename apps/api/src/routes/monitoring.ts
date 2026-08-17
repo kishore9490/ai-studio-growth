@@ -65,6 +65,21 @@ export async function registerMonitoringRoutes(app: FastifyInstance, context: Ap
   });
 
   /** Demo affordance: runs a sweep against the mock signal feed. */
+  app.post('/v1/monitoring/enable-all', async (request) => {
+    const access = resolveAccess(context, request);
+    if (!access.entitlements.canUseMonitoring) throw forbidden('Your plan does not include monitoring.');
+    const created = platform.enableMonitoringForWorkspace(access.workspaceId, access);
+    return { data: { enabled: created.length } };
+  });
+
+  app.post('/v1/monitoring/:id/disable', async (request) => {
+    const access = resolveAccess(context, request);
+    const { id } = request.params as { id: string };
+    const rule = platform.store.monitoringRules.get(id);
+    if (!rule || rule.workspaceId !== access.workspaceId) throw notFound('Monitoring rule');
+    return { data: platform.monitoring.disable(id) };
+  });
+
   app.post('/v1/monitoring/sweep', async (request) => {
     const access = resolveAccess(context, request);
     if (!access.entitlements.canUseMonitoring) throw forbidden('Your plan does not include monitoring.');

@@ -18,7 +18,7 @@ import {
 import { formatDate, formatInr, humanize, percent } from '../../lib/format';
 
 export function BillingPage() {
-  const { platform, workspace, organization, run } = usePlatform();
+  const { platform, workspace, organization, execute } = usePlatform();
   const [toast, setToast] = useState<string | null>(null);
 
   if (!workspace) {
@@ -43,7 +43,7 @@ export function BillingPage() {
           <Button
             icon={<Receipt className="h-4 w-4" />}
             onClick={() => {
-              run((p) => p.billing.issueInvoice(workspace.id, organization.id));
+              void execute((c) => c.issueInvoice());
               setToast('Invoice issued for the current period.');
             }}
           >
@@ -135,7 +135,7 @@ export function BillingPage() {
                               size="sm"
                               icon={<CreditCard className="h-3 w-3" />}
                               onClick={() => {
-                                run((p) => p.billing.recordPayment(invoice.id));
+                                void execute((c) => c.recordPayment(invoice.id));
                                 setToast(`Payment recorded for ${invoice.number}.`);
                               }}
                             >
@@ -209,7 +209,7 @@ export function BillingPage() {
                         size="sm"
                         className="mt-2 w-full"
                         onClick={() => {
-                          run((p) => p.billing.subscribe({ workspaceId: workspace.id, organizationId: organization.id, planId: candidate.id }));
+                          void execute((c) => c.changePlan(candidate.id));
                           setToast(`Subscription moved to ${candidate.name}.`);
                         }}
                       >
@@ -255,7 +255,7 @@ export function BillingPage() {
                 size="sm"
                 className="mt-2 w-full"
                 onClick={() => {
-                  run((p) => p.billing.cancel(workspace.id));
+                  void execute((c) => c.cancelSubscription());
                   setToast('Subscription cancelled. The workspace reverts to free member capabilities.');
                 }}
               >

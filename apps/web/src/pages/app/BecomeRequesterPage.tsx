@@ -29,7 +29,7 @@ const STEPS = [
  * at the last step.
  */
 export function BecomeRequesterPage() {
-  const { platform, organization, isRequester, run } = usePlatform();
+  const { platform, organization, isRequester, execute } = usePlatform();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [target, setTarget] = useState<VerificationTarget>('SUPPLIER');
@@ -40,35 +40,30 @@ export function BecomeRequesterPage() {
   const generated = useMemo(() => generatePolicy({ target, industry, riskLevel: risk }), [target, industry, risk]);
   const plans = platform.billing.plans().filter((plan) => plan.tier !== 'MEMBER_FREE');
 
-  const activate = () => {
-    const created = run((p) => {
-      const result = p.activateRequester({ organizationId: organization.id, planId });
-      // Give the new requester its generated policy so the first campaign is
-      // one click away.
-      p.policies.create({
+  const activate = async () => {
+    await execute((c) => c.activateRequester(planId));
+    // Give the new requester its generated policy so the first campaign is one
+    // click away. Separate call on purpose: activation must succeed on its own
+    // before anything is created under it.
+    await execute((c) =>
+      c.createPolicy({
         name: generated.name,
         description: generated.description,
         subjectType: generated.subjectType,
         relationshipType: generated.relationshipType,
         industry: generated.industry,
         riskLevel: generated.riskLevel,
-        workspaceId: result.workspace.id,
-        createdBy: organization.displayName,
-        version: {
-          requiredChecks: generated.requiredChecks,
-          optionalChecks: generated.optionalChecks,
-          documents: generated.documents,
-          thresholds: generated.thresholds,
-          validityDays: generated.validityDays,
-          reverificationDays: generated.reverificationDays,
-          monitoringFrequency: generated.monitoringFrequency,
-          approvalRule: generated.approvalRule,
-          requiresConsent: generated.requiresConsent,
-        },
-      });
-      return result;
-    });
-    if (created) navigate('/app/verifications/new');
+        requiredChecks: generated.requiredChecks,
+        optionalChecks: generated.optionalChecks,
+        thresholds: generated.thresholds,
+        validityDays: generated.validityDays,
+        reverificationDays: generated.reverificationDays,
+        monitoringFrequency: generated.monitoringFrequency,
+        approvalRule: generated.approvalRule,
+        requiresConsent: generated.requiresConsent,
+      }),
+    );
+    navigate('/app/verifications/new');
   };
 
   if (isRequester) {

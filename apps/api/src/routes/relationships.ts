@@ -94,6 +94,17 @@ export async function registerRelationshipRoutes(app: FastifyInstance, context: 
     };
   });
 
+  app.post('/v1/invitations/:id/decline', async (request) => {
+    const access = resolveAccess(context, request);
+    const { id } = request.params as { id: string };
+    const invitation = platform.store.invitations.get(id);
+    if (!invitation) throw notFound('Invitation');
+    if (invitation.toOrganizationId && invitation.toOrganizationId !== access.organizationId) {
+      throw forbidden('Only the invited organization can decline this invitation.');
+    }
+    return { data: platform.relationships.declineInvitation(id) };
+  });
+
   /* ---------------- relationships ---------------- */
 
   app.post('/v1/relationships', async (request, reply) => {

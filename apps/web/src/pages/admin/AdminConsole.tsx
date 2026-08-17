@@ -17,6 +17,7 @@ import {
 } from 'recharts';
 import { PRICING_DISCLAIMER } from '@bid/core';
 import { usePlatform } from '../../platform/PlatformProvider';
+import { DemoOnly } from '../../components/DemoOnly';
 import {
   Badge,
   Button,
@@ -42,6 +43,25 @@ const CHART_COLORS = ['#2559eb', '#0f766e', '#b45309', '#7c3aed', '#0e7490', '#b
 /** BID's own operating console (Sections 29, 40, 53). */
 export function AdminConsole() {
   const [tab, setTab] = useState('overview');
+  const { mode } = usePlatform();
+
+  if (mode === 'CONNECTED') {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+        <DemoOnly
+          title="BID internal console"
+          description="Network funnel, revenue, customer lifecycle, provider operations and pricing configuration."
+          reason={
+            <>
+              This is <strong>BID's own software</strong>, not a tenant surface: it configures the price book, enables
+              and disables verification providers, and reads every workspace's lifecycle. It needs platform-operator
+              credentials, which no customer account has — and correctly so.
+            </>
+          }
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full bg-slate-50">

@@ -92,4 +92,13 @@ export async function registerCampaignRoutes(app: FastifyInstance, context: ApiC
     reply.code(201);
     return { data: created, count: created.length };
   });
+  app.post('/v1/campaigns/:id/members/:memberId/invite', async (request) => {
+    const access = resolveAccess(context, request);
+    const { id, memberId } = request.params as { id: string; memberId: string };
+    const campaign = platform.campaigns.get(id);
+    if (!campaign || campaign.workspaceId !== access.workspaceId) throw notFound('Campaign');
+    const member = platform.store.campaignMembers.get(memberId);
+    if (!member || member.campaignId !== campaign.id) throw notFound('Campaign member');
+    return { data: platform.campaigns.inviteMember(memberId, access) };
+  });
 }

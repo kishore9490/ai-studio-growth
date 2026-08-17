@@ -8,7 +8,7 @@ import { OrgAvatar, VerificationStatusBadge } from '../../components/domain';
 import { formatDate, humanize } from '../../lib/format';
 
 export function RelationshipsPage() {
-  const { platform, workspace, organization, run } = usePlatform();
+  const { platform, workspace, organization, execute } = usePlatform();
   const [selected, setSelected] = useState<Relationship | null>(null);
   const [filter, setFilter] = useState('ALL');
 
@@ -165,12 +165,8 @@ export function RelationshipsPage() {
                   onClick={() => {
                     const target = platform.organizations.get(selected.targetOrganizationId!);
                     if (!target || !workspace) return;
-                    run((p) =>
-                      p.monitoring.enable({
-                        workspaceId: workspace.id,
-                        subjectRef: target.bidId,
-                        relationshipId: selected.id,
-                      }),
+                    void execute((c) =>
+                      c.enableMonitoringForRelationship({ subjectBidId: target.bidId, relationshipId: selected.id }),
                     );
                     setSelected(null);
                   }}
@@ -182,7 +178,9 @@ export function RelationshipsPage() {
                 <Button
                   size="sm"
                   onClick={() => {
-                    run((p) => p.relationships.transition(selected.id, 'SUSPENDED', 'suspended from relationship drawer'));
+                    void execute((c) =>
+                      c.transitionRelationship(selected.id, 'SUSPENDED', 'suspended from relationship drawer'),
+                    );
                     setSelected(null);
                   }}
                 >

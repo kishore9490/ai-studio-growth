@@ -30,6 +30,8 @@ const createPolicySchema = z.object({
     .default({ autoApproveScore: 75, reviewScore: 55, maxBlockingFailures: 0 }),
 });
 
+const adoptTemplateSchema = z.object({ templateKey: z.string().min(2), name: z.string().min(3).optional() });
+
 export async function registerPolicyRoutes(app: FastifyInstance, context: ApiContext): Promise<void> {
   const { platform } = context;
 
@@ -92,6 +94,28 @@ export async function registerPolicyRoutes(app: FastifyInstance, context: ApiCon
         })),
       },
     };
+  });
+
+  app.post('/v1/policies/adopt', async (request, reply) => {
+    const access = resolveAccess(context, request);
+    if (!access.entitlements.canCreatePolicies) {
+      throw forbidden('Your plan does not include custom policies.');
+    }
+    const body = adoptTemplateSchema.safeParse(request.body);
+    if (!body.success) throw badRequest('Invalid template payload', body.error.flatten());
+
+    const template = platform.policies.templates().find((candidate) => candidate.key === body.data.templateKey);
+    if (!template) throw notFound('Policy template');
+
+    // Adopting copies the template into the workspace as an editable policy;
+    // the BID-published template itself stays immutable and shared.
+    const policy = platform.policies.createFromTemplate(template, {
+      workspaceId: access.workspaceId,
+      createdBy: access.userName,
+      name: body.data.name,
+    });
+    reply.code(201);
+    return { data: policy };
   });
 
   app.post('/v1/policies', async (request, reply) => {

@@ -20,7 +20,7 @@ import { AttributionChip, BidIdChip, OrgAvatar } from '../../components/domain';
 import { formatDate, formatDateTime, humanize } from '../../lib/format';
 
 export function OrganizationPage() {
-  const { platform, organization, workspace, run } = usePlatform();
+  const { platform, organization, workspace, execute } = usePlatform();
   const [form, setForm] = useState({
     displayName: organization.displayName,
     legalName: organization.legalName,
@@ -95,7 +95,7 @@ export function OrganizationPage() {
                 variant="primary"
                 icon={<Save className="h-4 w-4" />}
                 onClick={() => {
-                  run((p) => p.organizations.update(organization.id, form));
+                  void execute((c) => c.updateOrganization(organization.bidId, form));
                   setToast('Organization profile updated. The change is recorded in the audit trail.');
                 }}
               >

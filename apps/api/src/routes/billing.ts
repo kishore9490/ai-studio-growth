@@ -65,4 +65,49 @@ export async function registerBillingRoutes(app: FastifyInstance, context: ApiCo
     });
     return { data: subscription };
   });
+  app.post('/v1/billing/activate-requester', async (request) => {
+    const access = resolveAccess(context, request);
+    const body = z.object({ planId: z.string(), seats: z.number().min(1).optional() }).safeParse(request.body);
+    if (!body.success) throw badRequest('Invalid activation payload', body.error.flatten());
+    const plan = platform.billing.plan(body.data.planId);
+    if (!plan) throw notFound('Plan');
+    if (plan.monthlyPricePaise <= 0) {
+      throw badRequest('Requester activation needs a paid plan; free membership does not include it.');
+    }
+
+    // Becoming a requester is the transition the whole commercial model turns
+    // on, so it is one call: claim the workspace if needed, subscribe, and
+    // switch on the requester capability together.
+    const result = platform.activateRequester({
+      organizationId: access.organizationId,
+      planId: plan.id,
+      seats: body.data.seats,
+      actor: { ...access, roles: ['OWNER'] },
+    });
+    return { data: { workspaceId: result.workspace.id, subscription: result.subscription } };
+  });
+
+  app.post('/v1/billing/subscription/cancel', async (request) => {
+    const access = resolveAccess(context, request);
+    const cancelled = platform.billing.cancel(access.workspaceId, { ...access, roles: ['OWNER'] });
+    if (!cancelled) throw notFound('Subscription');
+    return { data: cancelled };
+  });
+  app.post('/v1/billing/invoices', async (request, reply) => {
+    const access = resolveAccess(context, request);
+    const invoice = platform.billing.issueInvoice(access.workspaceId, access.organizationId);
+    if (!invoice) throw badRequest('There is nothing to invoice for the current period.');
+    reply.code(201);
+    return { data: invoice };
+  });
+
+  app.post('/v1/billing/invoices/:id/pay', async (request) => {
+    const access = resolveAccess(context, request);
+    const { id } = request.params as { id: string };
+    const invoice = platform.store.invoices.get(id);
+    if (!invoice || invoice.organizationId !== access.organizationId) throw notFound('Invoice');
+    // Recording a payment here stands in for a payment-gateway webhook; the
+    // gateway is the only thing that may assert this in a real deployment.
+    return { data: platform.billing.recordPayment(id) };
+  });
 }

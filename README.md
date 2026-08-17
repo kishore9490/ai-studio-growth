@@ -30,14 +30,23 @@ layer underneath it.
 | `prisma/schema.prisma` | The PostgreSQL schema the API persists to, plus the migrations that build it. |
 | `docs/` | Architecture, domain model, API, security, billing, verification model, provider integration, customer lifecycle, roadmap, assumptions, and 14 ADRs. |
 
-The web app runs the **real engine in the browser** against an in-memory store,
-so every workflow in the demo is a genuine state transition — invitations,
-provider routing, evidence, assessment, credential issuance, monitoring, billing
-and audit all actually happen.
+The web app runs in **two modes**, and the same screens serve both.
 
-The API runs that same engine against **PostgreSQL**. Records created over HTTP
-survive a restart; a request is not answered until the writes it caused have
-committed. See [docs/LOCAL_DEVELOPMENT.md](docs/LOCAL_DEVELOPMENT.md).
+**Connected** — point it at the API and you get a sign-in screen. Register an
+organization or sign in as a seeded account; everything on screen came from the
+server, and every change goes back to it through the documented API. Reload,
+restart, sign in elsewhere: the state is the same, because it lives in
+PostgreSQL rather than the tab.
+
+**Demo** — with no API configured, the *same domain engine* runs in the browser
+against a fictional network. Every workflow is still a genuine state transition
+— invitations, provider routing, evidence, assessment, credential issuance,
+monitoring, billing and audit all actually happen — but nothing is durable, and
+no server is needed. This is what makes the one-file build possible.
+
+Neither mode is a mock of the other: `packages/core` is the only implementation,
+consumed identically by the browser, the API and the tests. See
+[docs/LOCAL_DEVELOPMENT.md](docs/LOCAL_DEVELOPMENT.md).
 
 ---
 
@@ -61,13 +70,17 @@ npm test
 npm run build
 ```
 
-To run the API against PostgreSQL:
+To run the whole thing for real — PostgreSQL, the API, and a web app that signs
+in against it:
 
 ```bash
 docker compose up -d db
 cp .env.example .env
 npm run db:migrate     # applies prisma/migrations
 npm run dev:api        # first boot writes the demo network, later boots load it
+
+echo 'VITE_API_URL=http://127.0.0.1:4000' > apps/web/.env.local
+npm run dev            # sign in with bid-demo-password
 ```
 
 Requires Node 20+ (developed on Node 22).

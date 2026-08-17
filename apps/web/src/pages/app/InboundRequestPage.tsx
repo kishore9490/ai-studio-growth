@@ -28,7 +28,7 @@ import { formatDate, formatDateTime, humanize, percent } from '../../lib/format'
  */
 export function InboundRequestPage() {
   const { id = '' } = useParams();
-  const { platform, organization, run } = usePlatform();
+  const { platform, organization, execute } = usePlatform();
   const [uploadFor, setUploadFor] = useState<VerificationDocument | null>(null);
   const [fileName, setFileName] = useState('');
   const [note, setNote] = useState('');
@@ -286,7 +286,7 @@ export function InboundRequestPage() {
                     size="sm"
                     variant="primary"
                     onClick={() => {
-                      run((p) => p.verifications.grantConsent(consent.id));
+                      void execute((c) => c.grantConsent(consent.id));
                       setToast('Consent recorded with its purpose, scope and expiry.');
                     }}
                   >
@@ -297,7 +297,7 @@ export function InboundRequestPage() {
                   <Button
                     size="sm"
                     onClick={() => {
-                      run((p) => p.verifications.revokeConsent(consent.id));
+                      void execute((c) => c.revokeConsent(consent.id));
                       setToast('Consent revoked. Future processing under this scope stops.');
                     }}
                   >
@@ -341,13 +341,13 @@ export function InboundRequestPage() {
               disabled={!fileName.trim()}
               onClick={() => {
                 if (!uploadFor) return;
-                run((p) =>
-                  p.verifications.provideDocument({
+                void execute((c) =>
+                  c.provideDocument({
+                    verificationId: request.id,
                     documentId: uploadFor.id,
                     fileName: fileName.trim(),
                     sizeBytes: 220_000,
                     note: note || undefined,
-                    providedByOrganizationId: organization.id,
                   }),
                 );
                 setToast(`"${uploadFor.label}" provided. The requester has been notified.`);

@@ -43,9 +43,43 @@ test suite and the browser demo use — no database is needed to run either.
 
 ## Web app
 
+The web app runs in one of two modes, decided by whether an API is configured.
+
+### Connected — a real signed-in product
+
 ```bash
+echo 'VITE_API_URL=http://127.0.0.1:4000' > apps/web/.env.local
 npm run dev                   # http://localhost:5173
 ```
+
+You get a sign-in screen. Sign in with any seeded account and the password
+`bid-demo-password`, or register a new organization — that creates a real
+organization, workspace and owner in PostgreSQL.
+
+Everything on screen came from `GET /v1/workspace/snapshot`, and every change
+goes back through the API. Reload the page, restart the server, sign in from
+another browser: the state is the same, because it is not in the browser.
+
+Two surfaces are unavailable here, on purpose:
+
+- **The guided journey** acts as several organizations in turn. A signed-in
+  account is one organization, and being able to act as another is exactly the
+  tenant boundary the platform exists to enforce.
+- **The BID admin console** is staff software — it configures the price book and
+  enables verification providers. It needs platform-operator credentials, which
+  no customer account has.
+
+### Demo — the same engine, in the browser
+
+```bash
+rm -f apps/web/.env.local
+npm run dev
+```
+
+With no API configured the app seeds the fictional network in the browser and
+runs every workflow against it. Real state transitions, nothing durable, no
+server needed — which is what makes the single-file build possible. Both
+surfaces above work here, and you can act as any organization in the network.
 
 ## Checking it works
 

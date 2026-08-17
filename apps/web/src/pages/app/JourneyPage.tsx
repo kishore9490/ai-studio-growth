@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Check, Play, RotateCcw } from 'lucide-react';
 import { getPolicyTemplate } from '@bid/core';
 import { usePlatform } from '../../platform/PlatformProvider';
+import { DemoOnly } from '../../components/DemoOnly';
 import { Badge, Button, Callout, Card, ProgressBar, SectionHeading, Toast, cx } from '../../components/ui';
 import { DEMO_BID_IDS } from '@bid/core';
 
@@ -31,12 +32,28 @@ interface JourneyStep {
  * same engine the rest of the product uses — nothing here is a slideshow.
  */
 export function JourneyPage() {
-  const { platform, run, runAsync, switchOrganization } = usePlatform();
+  const { platform, mode, run, runAsync, switchOrganization } = usePlatform();
   const [index, setIndex] = useState(0);
   const [log, setLog] = useState<{ step: string; result: string }[]>([]);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const state = useRef<JourneyState>({});
+
+  if (mode === 'CONNECTED') {
+    return (
+      <DemoOnly
+        title="The golden path"
+        description="Fifteen steps from a cold counterparty to a paying customer inviting its own suppliers."
+        reason={
+          <>
+            The journey acts as <strong>several organizations in turn</strong> — the requester invites, the supplier
+            accepts and supplies documents, then becomes a requester itself. A signed-in account is one organization,
+            and being able to act as another would be exactly the tenant boundary this platform exists to enforce.
+          </>
+        }
+      />
+    );
+  }
 
   const abc = platform.organizations.byBidId(DEMO_BID_IDS.ABC);
   const abcWorkspace = abc ? platform.organizations.workspaceFor(abc.id) : undefined;

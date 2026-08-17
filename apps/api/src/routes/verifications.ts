@@ -333,6 +333,25 @@ export async function registerVerificationRoutes(app: FastifyInstance, context: 
     return { data: platform.verifications.grantConsent(id) };
   });
 
+  app.post('/v1/consents/:id/revoke', async (request) => {
+    resolveAccess(context, request);
+    const { id } = request.params as { id: string };
+    const consent = platform.store.consents.get(id);
+    if (!consent) throw notFound('Consent');
+    // Consent is withdrawable at any time. Nothing already collected is
+    // deleted here; what stops is the authority to collect anything further.
+    return { data: platform.verifications.revokeConsent(id) };
+  });
+
+  app.post('/v1/verification-requests/:id/finalize', async (request) => {
+    const access = resolveAccess(context, request);
+    const { id } = request.params as { id: string };
+    const verification = platform.verifications.get(id);
+    if (!verification) throw notFound('Verification request');
+    if (verification.workspaceId !== access.workspaceId) throw notFound('Verification request');
+    return { data: platform.verifications.finalize(id, access) };
+  });
+
   app.get('/v1/credentials', async (request) => {
     const access = resolveAccess(context, request);
     const held = platform.verifications.credentialsForOrganization(access.organizationId);

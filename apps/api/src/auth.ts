@@ -1,5 +1,5 @@
 import type { FastifyRequest } from 'fastify';
-import type { AccessContext, WorkspaceRole } from '@bid/core';
+import { hashToken, type AccessContext, type WorkspaceRole } from '@bid/core';
 import type { ApiContext } from './context.js';
 
 /**
@@ -71,16 +71,22 @@ export async function resolveIdentity(
     return { access, via: 'SESSION', sessionId: session.id };
   }
 
-  const stored = platform.store.apiKeys
+  // The prefix narrows the search; the digest decides. Matching on the prefix
+  // alone would authenticate anyone who had ever seen a key listed, since the
+  // prefix is exactly the part that gets shown.
+  const candidate = platform.store.apiKeys
     .all()
-    .find((key) => credential.startsWith(key.prefix) && !key.revokedAt);
+    .find((key) => !key.revokedAt && key.prefix.length > 0 && credential.startsWith(key.prefix));
 
-  if (stored) {
-    const workspace = platform.store.workspaces.get(stored.workspaceId);
+  if (candidate) {
+    const presented = await hashToken(credential);
+    if (presented !== candidate.hashedSecret) return undefined;
+
+    const workspace = platform.store.workspaces.get(candidate.workspaceId);
     if (!workspace) return undefined;
-    platform.store.apiKeys.update(stored.id, { lastUsedAt: new Date().toISOString() });
+    platform.store.apiKeys.update(candidate.id, { lastUsedAt: new Date().toISOString() });
     const access = platform.accessContextFor(workspace.organizationId, { roles: ['API_CLIENT'] });
-    return { access: { ...access, viaApiKey: true, scopes: stored.scopes }, via: 'API_KEY' };
+    return { access: { ...access, viaApiKey: true, scopes: candidate.scopes }, via: 'API_KEY' };
   }
 
   if (config.demoApiKey && credential === config.demoApiKey) {

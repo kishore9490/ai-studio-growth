@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import type { ApiContext } from '../context.js';
+import { registerApiKeyRoutes } from './api-keys.js';
 import { registerAuthRoutes } from './auth.js';
 import { registerOrganizationRoutes } from './organizations.js';
 import { registerRelationshipRoutes } from './relationships.js';
@@ -8,6 +9,7 @@ import { registerVerificationRoutes } from './verifications.js';
 import { registerCampaignRoutes } from './campaigns.js';
 import { registerMonitoringRoutes } from './monitoring.js';
 import { registerPublicRoutes } from './public.js';
+import { registerSnapshotRoutes } from './snapshot.js';
 import { registerBillingRoutes } from './billing.js';
 
 export const API_INDEX = {
@@ -68,6 +70,10 @@ export const API_INDEX = {
     'GET    /v1/plans',
     'GET    /v1/public/profiles/{bidId}',
     'GET    /v1/public/cards/{bidId}',
+    'GET    /v1/api-keys',
+    'POST   /v1/api-keys',
+    'DELETE /v1/api-keys/{id}',
+    'GET    /v1/workspace/snapshot',
   ],
   notes: [
     'Every authenticated route is tenant-scoped: records outside the caller workspace are invisible, not merely filtered.',
@@ -94,4 +100,6 @@ export async function registerRoutes(app: FastifyInstance, context: ApiContext):
   await registerCampaignRoutes(app, context);
   await registerMonitoringRoutes(app, context);
   await registerBillingRoutes(app, context);
+  await registerApiKeyRoutes(app, context);
+  await registerSnapshotRoutes(app, context);
 }

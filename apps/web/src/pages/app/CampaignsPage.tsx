@@ -22,7 +22,7 @@ import { VerificationStatusBadge } from '../../components/domain';
 import { formatDate, humanize } from '../../lib/format';
 
 export function CampaignsPage() {
-  const { platform, workspace, organization, entitlements, run } = usePlatform();
+  const { platform, workspace, organization, entitlements, execute } = usePlatform();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [policyId, setPolicyId] = useState('');
@@ -90,15 +90,7 @@ export function CampaignsPage() {
               disabled={!name || !policyId}
               onClick={() => {
                 if (!workspace) return;
-                run((p) =>
-                  p.campaigns.create({
-                    workspaceId: workspace.id,
-                    requesterOrganizationId: organization.id,
-                    name,
-                    policyId,
-                    relationshipType,
-                  }),
-                );
+                void execute((c) => c.createCampaign({ name, policyId, relationshipType }));
                 setOpen(false);
                 setName('');
                 setToast('Campaign created. Add counterparties to invite them in one batch.');
@@ -140,7 +132,7 @@ export function CampaignsPage() {
 
 export function CampaignDetailPage() {
   const { id = '' } = useParams();
-  const { platform, run } = usePlatform();
+  const { platform, execute } = usePlatform();
   const [addOpen, setAddOpen] = useState(false);
   const [memberName, setMemberName] = useState('');
   const [memberEmail, setMemberEmail] = useState('');
@@ -250,7 +242,7 @@ export function CampaignDetailPage() {
                           size="sm"
                           icon={<Send className="h-3 w-3" />}
                           onClick={() => {
-                            run((p) => p.campaigns.inviteMember(member.id));
+                            void execute((c) => c.inviteCampaignMember(campaign.id, member.id));
                             setToast(`Invitation sent to ${member.targetName}.`);
                           }}
                         >
@@ -285,7 +277,9 @@ export function CampaignDetailPage() {
               variant="primary"
               disabled={!memberName || !memberEmail.includes('@')}
               onClick={() => {
-                run((p) => p.campaigns.addMember({ campaignId: campaign.id, targetName: memberName, targetEmail: memberEmail }));
+                void execute((c) =>
+                  c.addCampaignMember({ campaignId: campaign.id, name: memberName, email: memberEmail }),
+                );
                 setAddOpen(false);
                 setMemberName('');
                 setMemberEmail('');

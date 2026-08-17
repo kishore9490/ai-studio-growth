@@ -26,7 +26,7 @@ const STEPS = [
 ];
 
 export function NewVerificationPage() {
-  const { platform, organization, entitlements, run } = usePlatform();
+  const { platform, organization, entitlements, execute } = usePlatform();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [existingOrgId, setExistingOrgId] = useState('');
@@ -81,18 +81,18 @@ export function NewVerificationPage() {
     (step === 2 && policyId) ||
     step === 3;
 
-  const submit = () => {
-    const result = run((p) =>
-      p.inviteCounterparty({
-        requesterOrganizationId: organization.id,
+  const submit = async () => {
+    const existing = existingOrgId ? platform.organizations.get(existingOrgId) : undefined;
+    const result = await execute((c) =>
+      c.inviteCounterparty({
         counterpartyName: resolvedName,
         counterpartyEmail: email || `contact@${resolvedName.toLowerCase().replace(/[^a-z]/g, '')}.example`,
-        counterpartyOrganizationId: existingOrgId || undefined,
+        counterpartyOrganizationBidId: existing?.bidId,
         relationshipType,
         policyId,
       }),
     );
-    navigate(`/app/verifications/${result.verification.id}`);
+    navigate(`/app/verifications/${result.verificationId}`);
   };
 
   return (

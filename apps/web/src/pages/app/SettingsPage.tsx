@@ -31,7 +31,7 @@ const SECURITY_CONTROLS = [
 ];
 
 export function SettingsPage() {
-  const { platform, workspace, organization, access, entitlements, run } = usePlatform();
+  const { platform, workspace, organization, access, entitlements, execute } = usePlatform();
   const [tab, setTab] = useState('team');
   const [keyOpen, setKeyOpen] = useState(false);
   const [keyName, setKeyName] = useState('');
@@ -255,17 +255,7 @@ export function SettingsPage() {
               icon={<KeyRound className="h-4 w-4" />}
               onClick={() => {
                 if (!workspace) return;
-                run((p) =>
-                  p.store.apiKeys.insert({
-                    id: `key_${Math.random().toString(36).slice(2, 8)}`,
-                    workspaceId: workspace.id,
-                    name: keyName,
-                    prefix: `bid_live_${Math.random().toString(36).slice(2, 5)}`,
-                    hashedSecret: 'demo-hash',
-                    scopes: ['organizations:read', 'verification-requests:write'],
-                    createdAt: new Date().toISOString(),
-                  }),
-                );
+                void execute((c) => c.createApiKey(keyName));
                 setKeyOpen(false);
                 setKeyName('');
                 setToast('API key created. In production the secret is shown once here and never again.');

@@ -16,3 +16,6 @@ dist-static/
 
 # local scratch scripts
 .scratch/
+
+# local web env
+apps/web/.env.local

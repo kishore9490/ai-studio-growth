@@ -61,7 +61,7 @@ function stepIndexFor(status: string): number {
 
 export function VerificationDetailPage() {
   const { id = '' } = useParams();
-  const { platform, workspace, organization, runAsync, run } = usePlatform();
+  const { platform, workspace, organization, execute } = usePlatform();
   const navigate = useNavigate();
   const [tab, setTab] = useState('checks');
   const [selectedCheck, setSelectedCheck] = useState<VerificationCheck | null>(null);
@@ -96,12 +96,13 @@ export function VerificationDetailPage() {
   const runNext = async () => {
     setRunning(true);
     try {
-      const next = await runAsync((p) => p.verifications.runNextCheck(request.id));
-      if (!next) {
-        run((p) => p.verifications.finalize(request.id));
+      const before = platform.verifications.pendingChecks(request.id).length;
+      await execute((c) => c.runVerification(request.id, 'NEXT'));
+      if (before <= 1) {
+        await execute((c) => c.finalizeVerification(request.id));
         setToast('All checks executed — assessment produced.');
       } else {
-        setToast(`Executed ${next.checkCode} → ${next.status}`);
+        setToast(`Check executed — ${before - 1} remaining.`);
       }
     } catch (error) {
       setToast(error instanceof Error ? error.message : String(error));
@@ -113,7 +114,7 @@ export function VerificationDetailPage() {
   const runAll = async () => {
     setRunning(true);
     try {
-      await runAsync((p) => p.runVerification(request.id));
+      await execute((c) => c.runVerification(request.id));
       setToast('Verification run complete.');
     } catch (error) {
       // Blocked runs (missing documents, missing consent) surface verbatim
@@ -160,7 +161,7 @@ export function VerificationDetailPage() {
                 </>
               )}
               {pending.length === 0 && !assessment && (
-                <Button variant="primary" onClick={() => run((p) => p.verifications.finalize(request.id))}>
+                <Button variant="primary" onClick={() => void execute((c) => c.finalizeVerification(request.id))}>
                   Produce assessment
                 </Button>
               )}
@@ -184,7 +185,7 @@ export function VerificationDetailPage() {
           permitting processing; it is a different object from the authorization one organization grants another.
           {consent && consent.status !== 'GRANTED' && isOwner && (
             <div className="mt-2">
-              <Button size="sm" onClick={() => run((p) => p.verifications.grantConsent(consent.id))}>
+              <Button size="sm" onClick={() => void execute((c) => c.grantConsent(consent.id))}>
                 Simulate subject granting consent
               </Button>
             </div>
@@ -286,7 +287,14 @@ export function VerificationDetailPage() {
                                   <Button
                                     size="sm"
                                     onClick={() => {
-                                      run((p) => p.verifications.reviewDocument(document.id, true, 'Accepted on review.'));
+                                      void execute((c) =>
+                                        c.reviewDocument({
+                                          verificationId: request.id,
+                                          documentId: document.id,
+                                          accept: true,
+                                          note: 'Accepted on review.',
+                                        }),
+                                      );
                                       setToast(`"${document.label}" accepted.`);
                                     }}
                                   >
@@ -296,12 +304,13 @@ export function VerificationDetailPage() {
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => {
-                                      run((p) =>
-                                        p.verifications.reviewDocument(
-                                          document.id,
-                                          false,
-                                          'Document is not legible or has expired — please resend.',
-                                        ),
+                                      void execute((c) =>
+                                        c.reviewDocument({
+                                          verificationId: request.id,
+                                          documentId: document.id,
+                                          accept: false,
+                                          note: 'Document is not legible or has expired — please resend.',
+                                        }),
                                       );
                                       setToast(`"${document.label}" returned to the subject.`);
                                     }}
@@ -488,7 +497,9 @@ export function VerificationDetailPage() {
               variant="danger"
               icon={<XCircle className="h-4 w-4" />}
               onClick={() => {
-                run((p) => p.verifications.decide(request.id, 'REJECTED', decisionNote || 'Rejected by reviewer.'));
+                void execute((c) =>
+                  c.decideVerification(request.id, 'REJECTED', decisionNote || 'Rejected by reviewer.'),
+                );
                 setDecisionOpen(false);
                 setToast('Decision recorded: rejected.');
               }}
@@ -497,8 +508,8 @@ export function VerificationDetailPage() {
             </Button>
             <Button
               onClick={() => {
-                run((p) =>
-                  p.verifications.decide(
+                void execute((c) =>
+                  c.decideVerification(
                     request.id,
                     'APPROVED_WITH_CONDITIONS',
                     decisionNote || 'Approved with conditions pending remediation.',
@@ -513,7 +524,7 @@ export function VerificationDetailPage() {
             <Button
               variant="primary"
               onClick={() => {
-                run((p) => p.verifications.decide(request.id, 'APPROVED', decisionNote || 'Evidence accepted.'));
+                void execute((c) => c.decideVerification(request.id, 'APPROVED', decisionNote || 'Evidence accepted.'));
                 setDecisionOpen(false);
                 setToast('Decision recorded: approved. Credential issued.');
                 navigate(`/app/verifications/${request.id}`);

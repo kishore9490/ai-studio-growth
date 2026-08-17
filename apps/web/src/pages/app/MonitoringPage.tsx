@@ -15,7 +15,7 @@ import {
 import { formatDateTime, humanize, relativeTime } from '../../lib/format';
 
 export function MonitoringPage() {
-  const { platform, workspace, entitlements, run } = usePlatform();
+  const { platform, workspace, entitlements, execute } = usePlatform();
   const [cycle, setCycle] = useState(1);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -36,8 +36,9 @@ export function MonitoringPage() {
               disabled={!entitlements.canUseMonitoring}
               onClick={() => {
                 if (!workspace) return;
-                const created = run((p) => p.enableMonitoringForWorkspace(workspace.id));
-                setToast(`Monitoring active on ${created.length} relationship(s).`);
+                void execute((c) => c.enableMonitoring()).then((count) =>
+                  setToast(`Monitoring active on ${count} relationship(s).`),
+                );
               }}
             >
               Enable on all active relationships
@@ -48,9 +49,10 @@ export function MonitoringPage() {
               disabled={!entitlements.canUseMonitoring}
               onClick={() => {
                 if (!workspace) return;
-                const raised = run((p) => p.monitoring.runSweep(workspace.id, cycle));
-                setCycle((value) => value + 1);
-                setToast(raised.length ? `${raised.length} new signal(s) raised.` : 'Sweep complete — no changes detected.');
+                void execute((c) => c.runMonitoringSweep(cycle)).then((raised) => {
+                  setCycle((value) => value + 1);
+                  setToast(raised ? `${raised} new signal(s) raised.` : 'Sweep complete — no changes detected.');
+                });
               }}
             >
               Run monitoring sweep
@@ -112,13 +114,13 @@ export function MonitoringPage() {
                     </p>
                     {alert.status === 'OPEN' && (
                       <div className="mt-2 flex gap-2">
-                        <Button size="sm" onClick={() => run((p) => p.monitoring.setAlertStatus(alert.id, 'ACKNOWLEDGED'))}>
+                        <Button size="sm" onClick={() => void execute((c) => c.setAlertStatus(alert.id, 'ACKNOWLEDGED'))}>
                           Acknowledge
                         </Button>
-                        <Button size="sm" onClick={() => run((p) => p.monitoring.setAlertStatus(alert.id, 'RESOLVED'))}>
+                        <Button size="sm" onClick={() => void execute((c) => c.setAlertStatus(alert.id, 'RESOLVED'))}>
                           Resolve
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => run((p) => p.monitoring.setAlertStatus(alert.id, 'DISMISSED'))}>
+                        <Button size="sm" variant="ghost" onClick={() => void execute((c) => c.setAlertStatus(alert.id, 'DISMISSED'))}>
                           Dismiss
                         </Button>
                       </div>
@@ -153,7 +155,7 @@ export function MonitoringPage() {
                       {rule.active && (
                         <button
                           className="text-2xs text-slate-500 underline"
-                          onClick={() => run((p) => p.monitoring.disable(rule.id))}
+                          onClick={() => void execute((c) => c.disableMonitoringRule(rule.id))}
                         >
                           Pause
                         </button>

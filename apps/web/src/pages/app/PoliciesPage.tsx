@@ -21,7 +21,7 @@ import {
 import { formatDate, formatInr, humanize } from '../../lib/format';
 
 export function PoliciesPage() {
-  const { platform, workspace, organization, entitlements, run } = usePlatform();
+  const { platform, workspace, organization, entitlements, execute } = usePlatform();
   const [createOpen, setCreateOpen] = useState(false);
   const [templateKey, setTemplateKey] = useState(platform.policies.templates()[0]?.key ?? '');
   const [name, setName] = useState('');
@@ -82,12 +82,8 @@ export function PoliciesPage() {
               onClick={() => {
                 const template = platform.policies.templates().find((t) => t.key === templateKey);
                 if (!template || !workspace) return;
-                run((p) =>
-                  p.policies.createFromTemplate(template, {
-                    workspaceId: workspace.id,
-                    createdBy: organization.displayName,
-                    name: name || `${template.name} (${organization.displayName})`,
-                  }),
+                void execute((c) =>
+                  c.createPolicyFromTemplate(template.key, name || `${template.name} (${organization.displayName})`),
                 );
                 setCreateOpen(false);
                 setName('');
@@ -158,7 +154,7 @@ function PolicyGrid({ policyIds }: { policyIds: string[] }) {
 
 export function PolicyDetailPage() {
   const { id = '' } = useParams();
-  const { platform, entitlements, run } = usePlatform();
+  const { platform, entitlements, execute } = usePlatform();
   const [versionOpen, setVersionOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [draftChecks, setDraftChecks] = useState<string[]>([]);
@@ -370,8 +366,8 @@ export function PolicyDetailPage() {
                   const existing = current.requiredChecks.find((check) => check.checkCode === code);
                   return existing ?? { checkCode: code, required: true, blocking: false };
                 });
-                run((p) =>
-                  p.policies.createVersion(policy.id, {
+                void execute((c) =>
+                  c.createPolicyVersion(policy.id, {
                     requiredChecks,
                     thresholds: { ...current.thresholds, autoApproveScore: autoApprove },
                   }),

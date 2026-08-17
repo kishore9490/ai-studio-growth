@@ -7,7 +7,7 @@ import { formatDate, humanize, relativeTime } from '../../lib/format';
 
 /** Verification requests where THIS organization is the subject. */
 export function RequestsReceivedPage() {
-  const { platform, organization, run } = usePlatform();
+  const { platform, organization, execute } = usePlatform();
   const requests = platform.verifications.listForSubject(organization.id);
   const invitations = platform.relationships.invitationsForOrganization(organization.id);
   const pendingInvitations = invitations.filter((invitation) => ['SENT', 'OPENED', 'CREATED'].includes(invitation.status));
@@ -41,14 +41,14 @@ export function RequestsReceivedPage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={() => run((p) => p.relationships.declineInvitation(invitation.id))}>
+                    <Button size="sm" onClick={() => void execute((c) => c.declineInvitation(invitation.id))}>
                       Decline
                     </Button>
                     <Button
                       size="sm"
                       variant="primary"
                       icon={<Check className="h-3.5 w-3.5" />}
-                      onClick={() => run((p) => p.acceptInvitation(invitation.id))}
+                      onClick={() => void execute((c) => c.acceptInvitation(invitation.id))}
                     >
                       Accept & claim BID identity
                     </Button>

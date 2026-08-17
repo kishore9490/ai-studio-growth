@@ -334,7 +334,7 @@ function SidebarContent({
 }
 
 function OrgSwitcher() {
-  const { platform, organization, switchOrganization } = usePlatform();
+  const { platform, organization, switchOrganization, canSwitchOrganization, mode, access, signOut } = usePlatform();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -361,10 +361,32 @@ function OrgSwitcher() {
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
           <div className="absolute left-0 top-full z-20 mt-1 w-80 rounded-md border border-slate-200 bg-white p-1.5 shadow-panel">
-            <p className="px-2 py-1 text-2xs uppercase tracking-wider text-slate-400">
-              View as — every workspace is a separate tenant
-            </p>
-            {switchable.map((candidate) => (
+            {mode === 'CONNECTED' ? (
+              <div className="px-2 py-1.5">
+                <p className="text-2xs uppercase tracking-wider text-slate-400">Signed in</p>
+                <p className="mt-0.5 text-xs font-medium text-navy-900">{access.userName}</p>
+                <p className="font-mono text-2xs text-slate-500">{organization.bidId}</p>
+                <p className="mt-2 text-2xs leading-relaxed text-slate-500">
+                  Acting as another organization is a demo affordance. Here you are one tenant, and every other
+                  workspace is invisible.
+                </p>
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    void signOut();
+                  }}
+                  className="mt-2 w-full rounded border border-slate-200 px-2 py-1.5 text-xs font-medium text-navy-800 hover:bg-slate-50"
+                >
+                  Sign out
+                </button>
+              </div>
+            ) : (
+              <p className="px-2 py-1 text-2xs uppercase tracking-wider text-slate-400">
+                View as — every workspace is a separate tenant
+              </p>
+            )}
+            {canSwitchOrganization &&
+              switchable.map((candidate) => (
               <button
                 key={candidate.id}
                 onClick={() => {
@@ -383,8 +405,8 @@ function OrgSwitcher() {
                   <span className="block font-mono text-2xs text-slate-500">{candidate.bidId}</span>
                 </span>
                 <CommercialStateBadge state={candidate.commercialState} />
-              </button>
-            ))}
+                </button>
+              ))}
           </div>
         </>
       )}

@@ -35,7 +35,16 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     host: env.HOST ?? '0.0.0.0',
     nodeEnv: (env.NODE_ENV as AppConfig['nodeEnv']) ?? 'development',
     publicBaseUrl: env.PUBLIC_BASE_URL ?? 'https://bidtrust.in',
-    corsOrigins: (env.CORS_ORIGINS ?? 'http://localhost:5173,http://localhost:4173').split(',').map((value) => value.trim()),
+    // localhost and 127.0.0.1 are different origins to a browser, and dev
+    // servers bind whichever you asked for — allowing only one of them turns a
+    // working setup into "the API is not responding".
+    corsOrigins: (
+      env.CORS_ORIGINS ??
+      'http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173'
+    )
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean),
     demoApiKey: env.BID_DEMO_API_KEY ?? 'bid_demo_key',
     requestLogging: env.REQUEST_LOGGING !== 'false',
     persistence: env.BID_PERSISTENCE === 'memory' || !env.DATABASE_URL?.trim() ? 'memory' : 'postgres',
