@@ -89,12 +89,14 @@ real person.
 
 1. `/` — the public landing page
 2. `/app` — ABC Technologies' dashboard (switch organizations from the top-left)
-3. `/app/journey` — the guided golden path: 14 steps that take a brand-new
+3. `/app/journey` — the guided golden path: 15 steps that take a brand-new
    counterparty from *invited* → *member* → *verified* → *requester* → *paying
    customer* → *inviting its own suppliers*, performing real mutations
-4. `/profile/BID-BUS-00231` — a public BID profile and digital card
-5. `/architecture` — the interactive architecture explorer (12 views)
-6. `/admin` — BID's own console: funnel, revenue, customer lifecycle, providers,
+4. `/app/requests-received/:id` — the *subject's* view: what was asked, what it
+   must supply, and exactly what the requester will and will not see
+5. `/profile/BID-BUS-00231` — a public BID profile and digital card
+6. `/architecture` — the interactive architecture explorer (12 views)
+7. `/admin` — BID's own console: funnel, revenue, customer lifecycle, providers,
    pricing configuration
 
 ---

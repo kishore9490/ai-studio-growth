@@ -135,6 +135,21 @@ export function JourneyPage() {
       link: '/app/requests-sent',
     },
     {
+      id: 'documents',
+      actor: 'Deltaform',
+      title: 'Deltaform provides the documents the policy asked for',
+      detail:
+        'The policy does not only trigger provider checks — it names the paperwork the subject must supply. Until those arrive, the dependent checks stay blocked rather than quietly scoring zero.',
+      run: () => {
+        if (!state.current.verificationId) return 'Run the previous steps first.';
+        const provided = run((p) => p.provideAllDocuments(state.current.verificationId!));
+        return provided.length
+          ? `${provided.length} document(s) provided: ${provided.map((document) => document.label).join(', ')}.`
+          : 'This policy required no documents.';
+      },
+      link: undefined,
+    },
+    {
       id: 'run-checks',
       actor: 'BID engine',
       title: 'Run the verification plan',
@@ -296,7 +311,7 @@ export function JourneyPage() {
       <Toast message={toast} onDismiss={() => setToast(null)} />
       <SectionHeading
         title="Guided journey — the golden path"
-        description="Fourteen steps that take a counterparty from “never heard of BID” to “paying customer verifying its own network”. Every step mutates the real store."
+        description="Fifteen steps that take a counterparty from “never heard of BID” to “paying customer verifying its own network”. Every step mutates the real store."
         actions={
           <div className="flex gap-2">
             <Button

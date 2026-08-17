@@ -167,6 +167,10 @@ export async function seedDemo(now: string = NOW): Promise<DemoHandles> {
 
   clock.set(addDays(now, -94));
   platform.acceptInvitation(xyzInvite.invitation.id);
+  clock.set(addDays(now, -93));
+  // The subject supplies what the policy asked for before any check runs.
+  platform.provideAllDocuments(xyzInvite.verification.id);
+
   clock.set(addDays(now, -92));
   if (xyzInvite.verification) {
     await verifications.runAllChecks(xyzInvite.verification.id);
@@ -231,6 +235,7 @@ export async function seedDemo(now: string = NOW): Promise<DemoHandles> {
   clock.set(addDays(now, -38));
   platform.acceptInvitation(lmnInvite.invitation.id);
   if (lmnInvite.verification) {
+    platform.provideAllDocuments(lmnInvite.verification.id);
     verifications.start(lmnInvite.verification.id, abcCtx);
     await verifications.runNextCheck(lmnInvite.verification.id);
     await verifications.runNextCheck(lmnInvite.verification.id);
@@ -261,6 +266,8 @@ export async function seedDemo(now: string = NOW): Promise<DemoHandles> {
   });
   clock.set(addDays(now, -20));
   platform.acceptInvitation(rstInvite.invitation.id);
+  clock.set(addDays(now, -19));
+  platform.provideAllDocuments(rstInvite.verification.id);
   clock.set(addDays(now, -18));
   if (rstInvite.verification) {
     await verifications.runAllChecks(rstInvite.verification.id);
@@ -356,6 +363,7 @@ export async function seedDemo(now: string = NOW): Promise<DemoHandles> {
   const consent = verifications.requestConsent({ verificationRequestId: bgv.id });
   clock.set(addDays(now, -11));
   verifications.grantConsent(consent.id);
+  platform.provideAllDocuments(bgv.id, ravi.id);
   await verifications.runAllChecks(bgv.id);
 
   /* ---------------- Wider network for analytics ---------------- */
@@ -411,6 +419,7 @@ export async function seedDemo(now: string = NOW): Promise<DemoHandles> {
   clock.set(addDays(now, -118));
   platform.acceptInvitation(ghiInvite.invitation.id);
   if (ghiInvite.verification) {
+    platform.provideAllDocuments(ghiInvite.verification.id);
     await verifications.runAllChecks(ghiInvite.verification.id);
     const ghiRequest = verifications.get(ghiInvite.verification.id)!;
     if (ghiRequest.decision === 'PENDING' && ghiRequest.status !== 'FAILED') {

@@ -311,6 +311,34 @@ export interface VerificationRequest {
   costPaise: number;
 }
 
+/**
+ * A document the applied policy requires from the subject.
+ *
+ * The subject supplies it; the requester reviews it. Document metadata lives
+ * here — the file itself belongs in object storage behind a signed URL, and is
+ * classified by the policy that asked for it, not by where it is displayed.
+ */
+export interface VerificationDocument {
+  id: string;
+  verificationRequestId: string;
+  code: string;
+  label: string;
+  required: boolean;
+  visibility: Visibility;
+  status: 'REQUESTED' | 'PROVIDED' | 'ACCEPTED' | 'REJECTED';
+  fileName?: string;
+  sizeBytes?: number;
+  /** Integrity anchor over the stored object. */
+  contentHash?: string;
+  note?: string;
+  providedByOrganizationId?: string;
+  providedAt?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  reviewNote?: string;
+  createdAt: string;
+}
+
 export interface VerificationCheck {
   id: string;
   verificationRequestId: string;

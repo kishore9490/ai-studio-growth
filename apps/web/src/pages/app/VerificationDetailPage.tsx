@@ -79,7 +79,7 @@ export function VerificationDetailPage() {
     );
   }
 
-  const { request, checks, results, evidence, assessment, credential, consent } = detail;
+  const { request, checks, documents, results, evidence, assessment, credential, consent } = detail;
   const isOwner = request.workspaceId === workspace?.id;
   const isSubject = request.subjectOrganizationId === organization.id;
   const policy = platform.policies.get(request.policyId);
@@ -90,6 +90,8 @@ export function VerificationDetailPage() {
   const requester = platform.organizations.get(request.requesterOrganizationId);
 
   const blockedOnConsent = checks.filter((c) => c.status === 'BLOCKED_ON_CONSENT');
+  const blockedOnDocuments = checks.filter((c) => c.status === 'BLOCKED_ON_DOCUMENT');
+  const outstandingDocuments = platform.verifications.outstandingDocuments(request.id);
 
   const runNext = async () => {
     setRunning(true);
@@ -101,6 +103,8 @@ export function VerificationDetailPage() {
       } else {
         setToast(`Executed ${next.checkCode} → ${next.status}`);
       }
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : String(error));
     } finally {
       setRunning(false);
     }
@@ -111,6 +115,10 @@ export function VerificationDetailPage() {
     try {
       await runAsync((p) => p.runVerification(request.id));
       setToast('Verification run complete.');
+    } catch (error) {
+      // Blocked runs (missing documents, missing consent) surface verbatim
+      // rather than silently producing a partial assessment.
+      setToast(error instanceof Error ? error.message : String(error));
     } finally {
       setRunning(false);
     }
@@ -184,6 +192,14 @@ export function VerificationDetailPage() {
         </Callout>
       )}
 
+      {blockedOnDocuments.length > 0 && (
+        <Callout tone="attention" title="Blocked: waiting on documents from the subject">
+          {blockedOnDocuments.length} check(s) cannot run until {request.subjectName} provides{' '}
+          {outstandingDocuments.map((document) => document.label).join(', ')}. The subject sees the same list in its own
+          workspace, with the classification each document carries.
+        </Callout>
+      )}
+
       {request.status === 'REQUIRES_REVIEW' && (
         <Callout tone="exception" title="Requires human review" icon={<ShieldAlert className="h-4 w-4" />}>
           The evidence did not satisfy the policy thresholds. BID does not decide whether a counterparty is acceptable —
@@ -200,6 +216,7 @@ export function VerificationDetailPage() {
                 onChange={setTab}
                 tabs={[
                   { id: 'checks', label: `Checks (${checks.length})` },
+                  { id: 'documents', label: `Documents (${documents.length})` },
                   { id: 'assessment', label: 'Assessment' },
                   { id: 'evidence', label: `Evidence (${evidence.length})` },
                   { id: 'providers', label: `Providers (${transactions.length})` },
@@ -210,6 +227,96 @@ export function VerificationDetailPage() {
             <div className="px-4 pb-4">
               <TabPanel id="checks" current={tab}>
                 <ChecksTable checks={checks} results={results} onSelect={setSelectedCheck} />
+              </TabPanel>
+
+              <TabPanel id="documents" current={tab}>
+                {documents.length === 0 ? (
+                  <Callout tone="pending" title="This policy requires no documents">
+                    Everything it asks for is answered by a routed provider check.
+                  </Callout>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="bid-table">
+                      <thead>
+                        <tr>
+                          <th>Document</th>
+                          <th>Requirement</th>
+                          <th>Provided</th>
+                          <th>Classification</th>
+                          <th>Status</th>
+                          <th className="text-right">Review</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {documents.map((document) => (
+                          <tr key={document.id}>
+                            <td>
+                              <div className="font-medium text-navy-900">{document.label}</div>
+                              {document.fileName && (
+                                <div className="font-mono text-2xs text-slate-500">
+                                  {document.fileName} · hash {document.contentHash}
+                                </div>
+                              )}
+                            </td>
+                            <td>
+                              <Badge tone={document.required ? 'info' : 'pending'}>
+                                {document.required ? 'Required' : 'Optional'}
+                              </Badge>
+                            </td>
+                            <td className="text-xs">{document.providedAt ? formatDateTime(document.providedAt) : '—'}</td>
+                            <td className="text-2xs text-slate-500">{humanize(document.visibility)}</td>
+                            <td>
+                              <Badge
+                                tone={
+                                  document.status === 'ACCEPTED'
+                                    ? 'verified'
+                                    : document.status === 'PROVIDED'
+                                      ? 'info'
+                                      : document.status === 'REJECTED'
+                                        ? 'exception'
+                                        : 'pending'
+                                }
+                              >
+                                {humanize(document.status)}
+                              </Badge>
+                            </td>
+                            <td className="text-right">
+                              {document.status === 'PROVIDED' && isOwner && (
+                                <div className="flex justify-end gap-1.5">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => {
+                                      run((p) => p.verifications.reviewDocument(document.id, true, 'Accepted on review.'));
+                                      setToast(`"${document.label}" accepted.`);
+                                    }}
+                                  >
+                                    Accept
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      run((p) =>
+                                        p.verifications.reviewDocument(
+                                          document.id,
+                                          false,
+                                          'Document is not legible or has expired — please resend.',
+                                        ),
+                                      );
+                                      setToast(`"${document.label}" returned to the subject.`);
+                                    }}
+                                  >
+                                    Return
+                                  </Button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </TabPanel>
 
               <TabPanel id="assessment" current={tab}>

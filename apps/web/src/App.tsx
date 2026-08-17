@@ -14,6 +14,7 @@ import { OrganizationPage } from './pages/app/OrganizationPage';
 import { NetworkPage } from './pages/app/NetworkPage';
 import { RelationshipsPage } from './pages/app/RelationshipsPage';
 import { RequestsReceivedPage, RequestsSentPage } from './pages/app/RequestsPages';
+import { InboundRequestPage } from './pages/app/InboundRequestPage';
 import { VerificationsPage } from './pages/app/VerificationsPage';
 import { VerificationDetailPage } from './pages/app/VerificationDetailPage';
 import { NewVerificationPage } from './pages/app/NewVerificationPage';
@@ -55,6 +56,7 @@ export function App() {
               <Route path="network" element={<NetworkPage />} />
               <Route path="relationships" element={<RelationshipsPage />} />
               <Route path="requests-received" element={<RequestsReceivedPage />} />
+              <Route path="requests-received/:id" element={<InboundRequestPage />} />
               <Route path="requests-sent" element={<RequestsSentPage />} />
               <Route path="verifications" element={<VerificationsPage />} />
               <Route path="verifications/new" element={<NewVerificationPage />} />

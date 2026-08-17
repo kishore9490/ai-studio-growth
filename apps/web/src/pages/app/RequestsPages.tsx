@@ -77,6 +77,7 @@ export function RequestsReceivedPage() {
                   <th>Relationship</th>
                   <th>Policy</th>
                   <th>Status</th>
+                  <th>Needs from you</th>
                   <th>Outcome</th>
                   <th className="text-right">Requested</th>
                 </tr>
@@ -85,13 +86,31 @@ export function RequestsReceivedPage() {
                 {requests.map((request) => {
                   const requester = platform.organizations.get(request.requesterOrganizationId);
                   const assessment = platform.verifications.assessment(request.id);
+                  const outstanding = platform.verifications.outstandingDocuments(request.id).length;
+                  const consent = request.consentId ? platform.store.consents.get(request.consentId) : undefined;
+                  const needsConsent = consent ? consent.status !== 'GRANTED' : false;
                   return (
                     <tr key={request.id}>
-                      <td className="font-medium text-navy-900">{requester?.displayName}</td>
+                      <td>
+                        <Link to={`/app/requests-received/${request.id}`} className="font-medium text-navy-900 hover:underline">
+                          {requester?.displayName}
+                        </Link>
+                        <div className="font-mono text-2xs text-slate-400">{request.bidId}</div>
+                      </td>
                       <td className="text-xs">{humanize(request.relationshipType)}</td>
                       <td className="text-xs">{platform.policies.get(request.policyId)?.name}</td>
                       <td>
                         <VerificationStatusBadge status={request.status} />
+                      </td>
+                      <td>
+                        {outstanding > 0 || needsConsent ? (
+                          <div className="flex flex-wrap gap-1">
+                            {outstanding > 0 && <Badge tone="attention">{outstanding} document(s)</Badge>}
+                            {needsConsent && <Badge tone="attention">Consent</Badge>}
+                          </div>
+                        ) : (
+                          <Badge tone="verified">Nothing</Badge>
+                        )}
                       </td>
                       <td className="text-xs">{assessment ? `${humanize(assessment.band)}` : '—'}</td>
                       <td className="text-right text-xs text-slate-500">{relativeTime(request.createdAt)}</td>

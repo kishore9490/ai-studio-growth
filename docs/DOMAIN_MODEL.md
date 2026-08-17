@@ -23,6 +23,7 @@ erDiagram
   POLICY ||--o{ POLICY_VERSION : versions
   POLICY ||--o{ VERIFICATION_REQUEST : governs
   VERIFICATION_REQUEST ||--o{ VERIFICATION_CHECK : plans
+  VERIFICATION_REQUEST ||--o{ VERIFICATION_DOCUMENT : requires
   VERIFICATION_CHECK ||--|| VERIFICATION_RESULT : produces
   VERIFICATION_CHECK ||--|| EVIDENCE : records
   VERIFICATION_REQUEST ||--|| RISK_ASSESSMENT : yields
@@ -211,6 +212,24 @@ failures, the gaps and the thresholds applied.
 
 ---
 
+## 7b. Documents
+
+```ts
+VerificationDocument {
+  verificationRequestId, code, label, required, visibility,
+  status,                       // REQUESTED → PROVIDED → ACCEPTED | REJECTED
+  fileName?, sizeBytes?, contentHash?, note?,
+  providedByOrganizationId?, providedAt?,
+  reviewedBy?, reviewedAt?, reviewNote?
+}
+```
+
+A policy's document requirements become explicit obligations on the subject, not
+free-text instructions in an email. Checks that depend on paperwork sit in
+`BLOCKED_ON_DOCUMENT` until nothing required is outstanding; a rejected document
+re-blocks them. Metadata lives in this table, the file itself in object storage
+behind a signed URL.
+
 ## 8. Consent vs authorization (ADR-007)
 
 | | Consent | Authorization |
@@ -256,6 +275,8 @@ hand-picked field list, so adding a check cannot accidentally publish it.
 5. A verification result always references evidence; evidence always names a
    source, a provider, a method and a timestamp.
 6. Person-subject checks never execute without an in-scope, unexpired consent.
+6b. Checks that depend on documents never execute while a required document is
+    outstanding — the run is refused rather than scored as a gap.
 7. Public projections never contain `SENSITIVE` or `RESTRICTED` material.
 8. Commercial state changes only through explicit lifecycle transitions, and
    never as a side effect of being verified.

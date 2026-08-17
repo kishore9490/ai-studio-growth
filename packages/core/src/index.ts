@@ -9,6 +9,7 @@
 export * from './domain/enums.js';
 export * from './domain/types.js';
 export * from './domain/check-catalog.js';
+export * from './domain/errors.js';
 
 export * from './policy/policy-templates.js';
 export * from './policy/plan.js';

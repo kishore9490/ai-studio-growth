@@ -190,6 +190,13 @@ enum ProviderCapability {
   RISK
 }
 
+enum DocumentStatus {
+  REQUESTED
+  PROVIDED
+  ACCEPTED
+  REJECTED
+}
+
 enum ConsentStatus {
   REQUESTED
   GRANTED
@@ -629,6 +636,7 @@ model VerificationRequest {
   policy               Policy              @relation(fields: [policyId], references: [id])
   consent              Consent?            @relation(fields: [consentId], references: [id])
   checks               VerificationCheck[]
+  documents            VerificationDocument[]
   results              VerificationResult[]
   evidence             Evidence[]
   assessment           RiskAssessment?
@@ -664,6 +672,34 @@ model VerificationCheck {
   @@index([verificationRequestId])
   @@index([status])
   @@map("verification_checks")
+}
+
+/// A document the applied policy requires from the subject. The file itself
+/// lives in object storage; only metadata and an integrity hash live here.
+model VerificationDocument {
+  id                       String         @id @default(cuid())
+  verificationRequestId    String
+  code                     String
+  label                    String
+  required                 Boolean        @default(true)
+  visibility               Visibility     @default(RELATIONSHIP_ONLY)
+  status                   DocumentStatus @default(REQUESTED)
+  fileName                 String?
+  sizeBytes                Int?
+  contentHash              String?
+  storageKey               String?
+  note                     String?
+  providedByOrganizationId String?
+  providedAt               DateTime?
+  reviewedBy               String?
+  reviewedAt               DateTime?
+  reviewNote               String?
+  createdAt                DateTime       @default(now())
+
+  request VerificationRequest @relation(fields: [verificationRequestId], references: [id], onDelete: Cascade)
+
+  @@index([verificationRequestId, status])
+  @@map("verification_documents")
 }
 
 model VerificationResult {

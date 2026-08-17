@@ -160,6 +160,79 @@ export async function registerVerificationRoutes(app: FastifyInstance, context: 
     };
   });
 
+  /* ---------------- documents ---------------- */
+
+  app.get('/v1/verification-requests/:id/documents', async (request) => {
+    const access = resolveAccess(context, request);
+    const { id } = request.params as { id: string };
+    const verification = platform.verifications.get(id);
+    if (!verification) throw notFound('Verification request');
+    // Both sides of the request need this list: the subject to know what to
+    // send, the requester to know what is still missing.
+    if (verification.workspaceId !== access.workspaceId && verification.subjectOrganizationId !== access.organizationId) {
+      throw notFound('Verification request');
+    }
+    const documents = platform.verifications.documents(id);
+    return {
+      data: documents.map((document) => ({
+        id: document.id,
+        code: document.code,
+        label: document.label,
+        required: document.required,
+        visibility: document.visibility,
+        status: document.status,
+        fileName: document.fileName,
+        providedAt: document.providedAt,
+        reviewNote: document.reviewNote,
+      })),
+      outstanding: platform.verifications.outstandingDocuments(id).length,
+    };
+  });
+
+  /** Supplied by the subject organization, not by the requester. */
+  app.post('/v1/verification-requests/:id/documents/:documentId', async (request) => {
+    const access = resolveAccess(context, request);
+    const { id, documentId } = request.params as { id: string; documentId: string };
+    const verification = platform.verifications.get(id);
+    if (!verification) throw notFound('Verification request');
+    if (verification.subjectOrganizationId !== access.organizationId) {
+      throw forbidden('Only the subject organization can provide documents for this verification.');
+    }
+
+    const body = z
+      .object({ fileName: z.string().min(1), sizeBytes: z.number().min(0).optional(), note: z.string().max(500).optional() })
+      .safeParse(request.body);
+    if (!body.success) throw badRequest('Invalid document payload', body.error.flatten());
+
+    const document = platform.verifications.provideDocument({
+      documentId,
+      fileName: body.data.fileName,
+      sizeBytes: body.data.sizeBytes,
+      note: body.data.note,
+      providedByOrganizationId: access.organizationId,
+    });
+    return {
+      data: document,
+      outstanding: platform.verifications.outstandingDocuments(id).length,
+      note: 'Metadata only in this build. Production issues a signed upload URL and stores the object in encrypted storage.',
+    };
+  });
+
+  app.post('/v1/verification-requests/:id/documents/:documentId/review', async (request) => {
+    const access = resolveAccess(context, request);
+    const { id, documentId } = request.params as { id: string; documentId: string };
+    const verification = platform.verifications.get(id);
+    if (!verification) throw notFound('Verification request');
+    if (verification.workspaceId !== access.workspaceId) {
+      throw forbidden('Only the requesting workspace can review documents.');
+    }
+
+    const body = z.object({ accept: z.boolean(), note: z.string().min(3) }).safeParse(request.body);
+    if (!body.success) throw badRequest('Invalid review payload', body.error.flatten());
+
+    return { data: platform.verifications.reviewDocument(documentId, body.data.accept, body.data.note, access) };
+  });
+
   /** Quick status lookup for an organization the caller has a relationship with. */
   app.get('/v1/verification-status/:bidId', async (request) => {
     const access = resolveAccess(context, request);
@@ -294,7 +367,7 @@ function serializeCredential(credential: {
 function serializeRequest(context: ApiContext, id: string, includePrivate = true) {
   const detail = context.platform.verifications.detail(id, includePrivate ? 'RESTRICTED' : 'RELATIONSHIP_ONLY');
   if (!detail) throw notFound('Verification request');
-  const { request, checks, assessment, credential } = detail;
+  const { request, checks, documents, assessment, credential } = detail;
   return {
     id: request.id,
     bidId: request.bidId,
@@ -310,6 +383,13 @@ function serializeRequest(context: ApiContext, id: string, includePrivate = true
     completedAt: request.completedAt,
     expiresAt: request.expiresAt,
     costPaise: includePrivate ? request.costPaise : undefined,
+    documents: documents.map((document) => ({
+      id: document.id,
+      label: document.label,
+      required: document.required,
+      status: document.status,
+    })),
+    outstandingDocuments: context.platform.verifications.outstandingDocuments(id).length,
     checks: checks.map((check) => ({
       checkCode: check.checkCode,
       category: check.category,

@@ -56,8 +56,10 @@ The application is runnable at every phase boundary; `npm run build` and
 ## Product roadmap
 
 **Near term**
-- Document upload with signed URLs, expiry tracking and re-request workflow
-- Remediation loop: request a specific missing document from a counterparty
+- Real document upload behind signed URLs (the request → provide → review →
+  re-request loop and its integrity hashes already exist; only the object store
+  is missing)
+- Document expiry tracking and automatic re-request before it lapses
 - Bulk counterparty import with de-duplication against existing identities
 - Requester-tunable assessment category weights
 - Policy diffing and impact analysis before versioning

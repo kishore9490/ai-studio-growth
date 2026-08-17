@@ -35,6 +35,7 @@ Public routes (`/v1/public/*`, `/health`) require no key.
 | 401 | `UNAUTHORIZED` | Missing or unrecognized API key |
 | 403 | `FORBIDDEN` | Role (`reason: ROLE`) or plan (`reason: ENTITLEMENT`) does not permit it |
 | 404 | `NOT_FOUND` | Absent — or outside your tenant, which is reported identically |
+| 409 | `VERIFICATION_BLOCKED` | The verification is waiting on consent or documents; the body names what is outstanding |
 | 429 | `RATE_LIMITED` | Per-key window exhausted |
 
 Records belonging to another workspace return **404, not 403**: existence itself
@@ -53,6 +54,7 @@ is not disclosed across tenants.
 | Relationships | `POST /v1/relationships` · `GET /v1/relationships` · `GET /v1/relationships/{id}` · `PATCH /v1/relationships/{id}` |
 | Policies | `GET /v1/policies` · `POST /v1/policies` · `GET /v1/policies/{id}` · `GET /v1/policies/{id}/plan` · `POST /v1/policies/{id}/versions` · `POST /v1/policies/generate` |
 | Verification | `POST /v1/verification-requests` · `GET /v1/verification-requests` · `GET /v1/verification-requests/{id}` · `POST /v1/verification-requests/{id}/run` · `POST /v1/verification-requests/{id}/decision` · `GET /v1/verification-requests/{id}/evidence` · `GET /v1/verification-status/{bidId}` |
+| Documents | `GET /v1/verification-requests/{id}/documents` · `POST /v1/verification-requests/{id}/documents/{documentId}` · `POST /v1/verification-requests/{id}/documents/{documentId}/review` |
 | People | `POST /v1/bgv/requests` · `POST /v1/consents` · `POST /v1/consents/{id}/grant` |
 | Authorization | `POST /v1/authorizations` |
 | Credentials | `GET /v1/credentials` |
@@ -154,6 +156,66 @@ The subject organization calling the same endpoint receives a redacted set
 (`"redacted": true`) filtered to its clearance.
 
 ---
+
+## Documents
+
+A policy asks for paperwork as well as provider checks. Both sides of the
+request can list it; only the **subject** can supply it, and only the
+**requester** can review it.
+
+```bash
+curl -s -H "$KEY" localhost:4000/v1/verification-requests/vr_00jd/documents | jq
+```
+
+```json
+{
+  "data": [
+    { "id": "vdoc_001a", "label": "Labour licence", "required": true, "visibility": "RELATIONSHIP_ONLY", "status": "REQUESTED" },
+    { "id": "vdoc_001b", "label": "Workmen compensation insurance", "required": true, "visibility": "RELATIONSHIP_ONLY", "status": "REQUESTED" }
+  ],
+  "outstanding": 2
+}
+```
+
+Running before the paperwork arrives is refused, with the reason:
+
+```bash
+curl -s -X POST -H "$KEY" -H "$JSON" -d '{"mode":"ALL"}' \
+  localhost:4000/v1/verification-requests/vr_00jd/run
+# HTTP/1.1 409 Conflict
+```
+
+```json
+{
+  "error": {
+    "code": "VERIFICATION_BLOCKED",
+    "message": "Verification BID-VER-00007 is waiting on 2 document(s) from Southgate Facilities: Labour licence, Workmen compensation insurance.",
+    "blockedBy": "DOCUMENTS",
+    "outstanding": ["Labour licence", "Workmen compensation insurance"]
+  }
+}
+```
+
+The subject supplies each item (the requester attempting this gets `403`):
+
+```bash
+curl -s -X POST -H "$KEY" -H "x-bid-act-as: BID-BUS-00419" -H "$JSON" \
+  -d '{"fileName":"labour-licence.pdf","sizeBytes":210000}' \
+  localhost:4000/v1/verification-requests/vr_00jd/documents/vdoc_001a
+```
+
+and the requester accepts or returns it — returning it re-blocks the dependent
+checks and tells the subject why:
+
+```bash
+curl -s -X POST -H "$KEY" -H "$JSON" \
+  -d '{"accept":false,"note":"Licence has expired — please send the current one."}' \
+  localhost:4000/v1/verification-requests/vr_00jd/documents/vdoc_001a/review
+```
+
+Only document **metadata** crosses this API in the current build. Production
+issues a signed upload URL and stores the object encrypted; the hash recorded
+here is the integrity anchor for it.
 
 ## Decisions
 

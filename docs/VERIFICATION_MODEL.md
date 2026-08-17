@@ -11,6 +11,7 @@ does not mean.
 Verification request
   → Policy version (immutable)
   → Compiled plan
+  → Document requirements on the subject
   → Consent / authorization gate
   → Provider router
   → Provider
@@ -91,6 +92,37 @@ example an employer authorizing a staffing partner to run BGV on its behalf — 
 a separate object with its own scope and window (ADR-007).
 
 ---
+
+## 4b. Documents: what the subject owes
+
+A policy asks for two different things: checks a provider can run, and paperwork
+only the subject can supply. Both are made explicit at request time.
+
+Each `documents` entry on the policy version becomes a `VerificationDocument`
+with its own status (`REQUESTED → PROVIDED → ACCEPTED | REJECTED`), the
+classification the policy assigned it, and — once supplied — a file name, size
+and content hash.
+
+Checks whose catalog entry sets `requiresDocument` start in
+**`BLOCKED_ON_DOCUMENT`**. They unblock only when no required document is
+outstanding. Supplying the last one also advances the request to `ACCEPTED`.
+
+Consequences that matter:
+
+- `runAllChecks` **refuses** while paperwork is outstanding, raising
+  `VerificationBlockedError` (`blockedBy: 'DOCUMENTS'`, with the outstanding
+  labels). A verification missing its documents is not a verification with a low
+  score, and the platform will not quietly produce one. The API surfaces this as
+  `409 VERIFICATION_BLOCKED`.
+- Rejecting a supplied document re-blocks the dependent checks and notifies the
+  subject with the reviewer's reason, so remediation is a loop rather than a
+  dead end.
+- Consent and documents are independent gates. Clearing consent does not clear
+  outstanding paperwork, and vice versa.
+
+The subject sees exactly this list in its own workspace, with the classification
+attached to each item — including which documents are `SENSITIVE` or
+`RESTRICTED` — before deciding to supply anything.
 
 ## 5. Routing and execution
 

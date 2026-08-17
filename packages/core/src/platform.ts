@@ -522,6 +522,31 @@ export class BidPlatform {
     return { organization: this.organizations.require(organization.id), workspace, verification };
   }
 
+  /**
+   * Supplies every outstanding document for a verification.
+   *
+   * In the product the subject uploads these one at a time from its own
+   * workspace; this is the scripted equivalent used by the seed, the guided
+   * journey and tests.
+   */
+  provideAllDocuments(verificationRequestId: string, providedBy?: string) {
+    const request = this.verifications.get(verificationRequestId);
+    if (!request) return [];
+    const provided = this.verifications
+      .documents(verificationRequestId)
+      .filter((document) => document.status === 'REQUESTED' || document.status === 'REJECTED')
+      .map((document) =>
+        this.verifications.provideDocument({
+          documentId: document.id,
+          fileName: `${document.code.toLowerCase()}.pdf`,
+          sizeBytes: 180_000 + document.label.length * 1_000,
+          providedByOrganizationId: providedBy ?? request.subjectOrganizationId,
+        }),
+      );
+    this.notifyChange();
+    return provided;
+  }
+
   /** Runs every planned check and produces the assessment. */
   async runVerification(verificationRequestId: string) {
     const request = await this.verifications.runAllChecks(verificationRequestId);

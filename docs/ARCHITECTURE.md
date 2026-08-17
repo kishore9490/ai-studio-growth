@@ -90,8 +90,8 @@ sequenceDiagram
   R->>V: create(subject, relationship, policy)
   V->>P: currentVersion(policy) → compile plan
   P-->>V: plan (checks, thresholds, validity, SLA)
-  V->>C: any person-subject checks?
-  C-->>V: blocked until consent recorded
+  V->>C: any person-subject checks? any required documents?
+  C-->>V: blocked until consent recorded and documents supplied
   loop for each planned check
     V->>RT: execute(check, country)
     RT->>PR: capability call (fallback on unavailable)

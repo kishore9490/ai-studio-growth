@@ -31,6 +31,7 @@ import type {
   UsageRecord,
   User,
   VerificationCheck,
+  VerificationDocument,
   VerificationRequest,
   VerificationResult,
   WebhookEndpoint,
@@ -116,6 +117,7 @@ export class BidStore {
   policyVersions = new Collection<PolicyVersion>();
   verificationRequests = new Collection<VerificationRequest>();
   verificationChecks = new Collection<VerificationCheck>();
+  verificationDocuments = new Collection<VerificationDocument>();
   verificationResults = new Collection<VerificationResult>();
   evidence = new Collection<Evidence>();
   assessments = new Collection<Assessment>();

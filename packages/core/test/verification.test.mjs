@@ -135,3 +135,66 @@ test('the seeded demo network tells the intended story', async () => {
   const rstRequest = platform.store.verificationRequests.first((request) => request.subjectName.startsWith('RST'));
   assert.equal(rstRequest.status, 'REQUIRES_REVIEW', 'the exception path is represented in the demo data');
 });
+
+test('required documents gate the checks that depend on paperwork', async () => {
+  const { platform, requester, workspace } = await makePlatform();
+  const policy = platform.policies.createFromTemplate(getPolicyTemplate('CRITICAL_CONTRACTOR'), {
+    workspaceId: workspace.id,
+    createdBy: 'test',
+  });
+  const { invitation, verification } = platform.inviteCounterparty({
+    requesterOrganizationId: requester.id,
+    counterpartyName: 'Paperwork Contractors',
+    counterpartyEmail: 'ops@paperwork.example',
+    relationshipType: 'CONTRACTOR',
+    policyId: policy.id,
+  });
+  platform.acceptInvitation(invitation.id);
+
+  const documents = platform.verifications.documents(verification.id);
+  assert.ok(documents.length >= 2, 'the policy turns into explicit document requirements');
+  assert.ok(platform.verifications.outstandingDocuments(verification.id).length > 0);
+
+  const blocked = platform.verifications.checks(verification.id).filter((c) => c.status === 'BLOCKED_ON_DOCUMENT');
+  assert.ok(blocked.length > 0, 'document-dependent checks start blocked');
+
+  await assert.rejects(() => platform.verifications.runAllChecks(verification.id), /waiting on \d+ document/);
+
+  platform.provideAllDocuments(verification.id);
+  assert.equal(platform.verifications.outstandingDocuments(verification.id).length, 0);
+  assert.equal(
+    platform.verifications.checks(verification.id).filter((c) => c.status === 'BLOCKED_ON_DOCUMENT').length,
+    0,
+    'supplying the last document unblocks the checks',
+  );
+
+  await platform.runVerification(verification.id);
+  assert.equal(platform.verifications.pendingChecks(verification.id).length, 0);
+});
+
+test('rejecting a document re-blocks the checks that needed it', async () => {
+  const { platform, requester, workspace } = await makePlatform();
+  const policy = platform.policies.createFromTemplate(getPolicyTemplate('HEALTHCARE_VENDOR'), {
+    workspaceId: workspace.id,
+    createdBy: 'test',
+  });
+  const { invitation, verification } = platform.inviteCounterparty({
+    requesterOrganizationId: requester.id,
+    counterpartyName: 'Clinical Supplies Ltd',
+    counterpartyEmail: 'quality@clinical.example',
+    relationshipType: 'VENDOR',
+    policyId: policy.id,
+  });
+  platform.acceptInvitation(invitation.id);
+  platform.provideAllDocuments(verification.id);
+
+  const provided = platform.verifications.documents(verification.id).find((d) => d.required);
+  platform.verifications.reviewDocument(provided.id, false, 'Licence has expired — please send the current one.');
+
+  assert.equal(platform.verifications.documents(verification.id).find((d) => d.id === provided.id).status, 'REJECTED');
+  assert.ok(platform.verifications.outstandingDocuments(verification.id).length > 0);
+  assert.ok(
+    platform.verifications.checks(verification.id).some((c) => c.status === 'BLOCKED_ON_DOCUMENT'),
+    'the affected checks are blocked again',
+  );
+});

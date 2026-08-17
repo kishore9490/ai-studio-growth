@@ -1,6 +1,6 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
-import { ForbiddenError } from '@bid/core';
+import { ForbiddenError, isVerificationBlockedError } from '@bid/core';
 import { HttpError, type ApiContext } from './context.js';
 import { registerRoutes } from './routes/index.js';
 
@@ -47,6 +47,19 @@ export async function buildServer(context: ApiContext): Promise<FastifyInstance>
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof HttpError) {
       reply.code(error.statusCode).send({ error: { code: error.code, message: error.message, details: error.details } });
+      return;
+    }
+    if (isVerificationBlockedError(error)) {
+      // A legitimate workflow state, not a fault: tell the caller precisely
+      // what the subject still has to do.
+      reply.code(409).send({
+        error: {
+          code: error.code,
+          message: error.message,
+          blockedBy: error.blockedBy,
+          outstanding: error.outstanding,
+        },
+      });
       return;
     }
     if (error instanceof ForbiddenError) {

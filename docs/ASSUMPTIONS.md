@@ -27,7 +27,7 @@ appears anywhere in this repository.
 | Identifiers | Masked strings | Encrypted at rest, decrypted per permission |
 | Auth | Demo session; demo API key with `x-bid-act-as` | OIDC sessions, hashed workspace keys, SSO |
 | Rate limiting | In-process per key | Gateway with shared store |
-| Documents | Requirements modelled; no upload | Object storage with signed URLs and virus scanning |
+| Documents | Full request → provide → review → re-request loop, metadata + content hash only | Object storage with signed upload URLs, encryption and virus scanning |
 | Search | In-memory permission-aware scan | OpenSearch index fed from the event bus |
 | Credentials | Data records | Cryptographically signed, independently verifiable |
 | Payments | Recorded, not processed | Gateway integration, dunning, tax |
@@ -121,7 +121,7 @@ domain code changes. See ADR-014.
 
 ## 8. Testing
 
-`packages/core` ships 13 tests covering the invariants that matter most: member ≠
+`packages/core` ships 15 tests covering the invariants that matter most: member ≠
 customer, evidence completeness, consent gating, policy version sealing, public
 projection safety, tenant-scoped search, permission gates, generated-policy
 escalation and audit chain integrity. The web app has no component tests yet;

@@ -1,4 +1,5 @@
 import { requireCheckDefinition } from '../domain/check-catalog.js';
+import { VerificationBlockedError } from '../domain/errors.js';
 import type { CheckStatus, Decision, RelationshipType, SubjectType, Visibility } from '../domain/enums.js';
 import type {
   Assessment,
@@ -7,6 +8,7 @@ import type {
   Credential,
   Evidence,
   VerificationCheck,
+  VerificationDocument,
   VerificationRequest,
   VerificationResult,
 } from '../domain/types.js';
@@ -35,6 +37,7 @@ export interface CreateVerificationInput {
 export interface VerificationDetail {
   request: VerificationRequest;
   checks: VerificationCheck[];
+  documents: VerificationDocument[];
   results: VerificationResult[];
   evidence: Evidence[];
   assessment?: Assessment;
@@ -103,6 +106,7 @@ export class VerificationService {
     return {
       request,
       checks: this.checks(requestId),
+      documents: this.documents(requestId),
       results: this.results(requestId),
       evidence: this.evidence(requestId, maxVisibility),
       assessment: this.assessment(requestId),
@@ -153,11 +157,38 @@ export class VerificationService {
         category: planned.definition.category,
         required: planned.required,
         blocking: planned.blocking,
-        status: planned.definition.requiresConsent ? 'BLOCKED_ON_CONSENT' : 'PLANNED',
+        // Consent is the harder gate, so it wins when a check needs both.
+        status: planned.definition.requiresConsent
+          ? 'BLOCKED_ON_CONSENT'
+          : planned.definition.requiresDocument && policyVersion.documents.some((document) => document.required)
+            ? 'BLOCKED_ON_DOCUMENT'
+            : 'PLANNED',
         attempts: 0,
         costPaise: 0,
       };
       this.ctx.store.verificationChecks.insert(check);
+    }
+
+    // The subject cannot guess what to send: the policy's document
+    // requirements become explicit, trackable items on the request.
+    for (const document of policyVersion.documents) {
+      this.ctx.store.verificationDocuments.insert({
+        id: this.ctx.ids.next('vdoc'),
+        verificationRequestId: request.id,
+        code: document.code,
+        label: document.label,
+        required: document.required,
+        visibility: document.visibility,
+        status: 'REQUESTED',
+        createdAt: now,
+      });
+    }
+    if (policyVersion.documents.length > 0) {
+      this.ctx.emit(
+        'DocumentRequested',
+        { verificationRequestId: request.id, count: policyVersion.documents.length },
+        { workspaceId: input.workspaceId },
+      );
     }
 
     this.ctx.audit({
@@ -215,6 +246,132 @@ export class VerificationService {
     return this.transition(id, 'ACCEPTED', 'subject accepted', actor);
   }
 
+  /* ---------------- documents ---------------- */
+
+  documents(requestId: string): VerificationDocument[] {
+    return this.ctx.store.verificationDocuments.find((d) => d.verificationRequestId === requestId);
+  }
+
+  outstandingDocuments(requestId: string): VerificationDocument[] {
+    return this.documents(requestId).filter((d) => d.required && (d.status === 'REQUESTED' || d.status === 'REJECTED'));
+  }
+
+  /**
+   * The subject supplies a required document. Only metadata is stored here; the
+   * object itself belongs in storage behind a signed URL. Supplying the last
+   * outstanding document unblocks the checks that were waiting on paperwork.
+   */
+  provideDocument(input: {
+    documentId: string;
+    fileName: string;
+    sizeBytes?: number;
+    note?: string;
+    providedByOrganizationId?: string;
+  }): VerificationDocument {
+    const document = this.ctx.store.verificationDocuments.require(input.documentId);
+    const request = this.ctx.store.verificationRequests.require(document.verificationRequestId);
+    const now = this.ctx.now();
+
+    const updated = this.ctx.store.verificationDocuments.update(document.id, {
+      status: 'PROVIDED',
+      fileName: input.fileName,
+      sizeBytes: input.sizeBytes ?? 0,
+      contentHash: stableHash(`${document.id}|${input.fileName}|${input.sizeBytes ?? 0}`).toString(16),
+      note: input.note,
+      providedByOrganizationId: input.providedByOrganizationId ?? request.subjectOrganizationId,
+      providedAt: now,
+    });
+
+    this.ctx.audit({
+      actorType: 'USER',
+      actorId: input.providedByOrganizationId ?? request.subjectOrganizationId ?? 'subject',
+      actorName: request.subjectName,
+      workspaceId: request.workspaceId,
+      action: 'document.provided',
+      resourceType: 'verification_document',
+      resourceId: document.id,
+      summary: `${request.subjectName} provided "${document.label}" for ${request.bidId}.`,
+      metadata: { code: document.code, fileName: input.fileName },
+    });
+    this.ctx.emit(
+      'DocumentProvided',
+      { verificationRequestId: request.id, documentId: document.id, code: document.code },
+      { workspaceId: request.workspaceId, organizationId: request.subjectOrganizationId },
+    );
+    this.ctx.notify({
+      workspaceId: request.workspaceId,
+      organizationId: request.requesterOrganizationId,
+      kind: 'document.provided',
+      title: `${request.subjectName} provided "${document.label}"`,
+      body: 'Review the document, then run or resume the verification.',
+      severity: 'INFO',
+      link: `/app/verifications/${request.id}`,
+    });
+
+    this.unblockDocumentChecks(request.id);
+    return updated;
+  }
+
+  /** The requester accepts or rejects a supplied document. */
+  reviewDocument(documentId: string, accept: boolean, note: string, actor?: AccessContext): VerificationDocument {
+    const document = this.ctx.store.verificationDocuments.require(documentId);
+    const request = this.ctx.store.verificationRequests.require(document.verificationRequestId);
+    const now = this.ctx.now();
+
+    const updated = this.ctx.store.verificationDocuments.update(documentId, {
+      status: accept ? 'ACCEPTED' : 'REJECTED',
+      reviewedBy: actor?.userName ?? 'Reviewer',
+      reviewedAt: now,
+      reviewNote: note,
+    });
+
+    this.ctx.audit({
+      ctx: actor,
+      workspaceId: request.workspaceId,
+      action: accept ? 'document.accepted' : 'document.rejected',
+      resourceType: 'verification_document',
+      resourceId: documentId,
+      summary: `"${document.label}" ${accept ? 'accepted' : 'rejected'} for ${request.bidId}: ${note}`,
+      metadata: { code: document.code },
+    });
+    this.ctx.emit('DocumentReviewed', { documentId, accepted: accept }, { workspaceId: request.workspaceId });
+
+    if (!accept) {
+      // A rejected document re-blocks the checks that depend on paperwork, and
+      // the subject is told exactly what to resend.
+      for (const check of this.checks(request.id)) {
+        const definition = requireCheckDefinition(check.checkCode);
+        if (definition.requiresDocument && check.status === 'PLANNED') {
+          this.ctx.store.verificationChecks.update(check.id, { status: 'BLOCKED_ON_DOCUMENT' });
+        }
+      }
+      const subject = request.subjectOrganizationId ? this.organizations.get(request.subjectOrganizationId) : undefined;
+      this.ctx.notify({
+        organizationId: request.subjectOrganizationId,
+        workspaceId: subject?.primaryWorkspaceId,
+        kind: 'document.rejected',
+        title: `"${document.label}" needs to be resubmitted`,
+        body: note,
+        severity: 'WARNING',
+        link: `/app/requests-received/${request.id}`,
+      });
+    }
+    return updated;
+  }
+
+  private unblockDocumentChecks(requestId: string): void {
+    if (this.outstandingDocuments(requestId).length > 0) return;
+    for (const check of this.checks(requestId)) {
+      if (check.status === 'BLOCKED_ON_DOCUMENT') {
+        this.ctx.store.verificationChecks.update(check.id, { status: 'PLANNED' });
+      }
+    }
+    const request = this.ctx.store.verificationRequests.require(requestId);
+    if (request.status === 'INVITED' || request.status === 'REQUESTED') {
+      this.transition(requestId, 'ACCEPTED', 'all required documents provided');
+    }
+  }
+
   /* ---------------- consent & authorization ---------------- */
 
   /**
@@ -263,10 +420,13 @@ export class VerificationService {
     });
     const request = this.ctx.store.verificationRequests.first((r) => r.consentId === consentId);
     if (request) {
+      const documentsOutstanding = this.outstandingDocuments(request.id).length > 0;
       for (const check of this.checks(request.id)) {
-        if (check.status === 'BLOCKED_ON_CONSENT') {
-          this.ctx.store.verificationChecks.update(check.id, { status: 'PLANNED' });
-        }
+        if (check.status !== 'BLOCKED_ON_CONSENT') continue;
+        const definition = requireCheckDefinition(check.checkCode);
+        // Clearing consent does not clear a separate paperwork gate.
+        const next = definition.requiresDocument && documentsOutstanding ? 'BLOCKED_ON_DOCUMENT' : 'PLANNED';
+        this.ctx.store.verificationChecks.update(check.id, { status: next });
       }
       this.ctx.store.verificationRequests.update(request.id, { status: 'ACCEPTED', updatedAt: now });
     }
@@ -344,10 +504,24 @@ export class VerificationService {
 
   start(id: string, actor?: AccessContext): VerificationRequest {
     const request = this.ctx.store.verificationRequests.require(id);
-    const blocked = this.checks(id).filter((c) => c.status === 'BLOCKED_ON_CONSENT');
-    if (blocked.length > 0) {
-      throw new Error(
-        `Verification ${request.bidId} cannot start: ${blocked.length} check(s) require a recorded consent from ${request.subjectName}.`,
+    const blockedOnConsent = this.checks(id).filter((c) => c.status === 'BLOCKED_ON_CONSENT');
+    if (blockedOnConsent.length > 0) {
+      throw new VerificationBlockedError(
+        `Verification ${request.bidId} cannot start: ${blockedOnConsent.length} check(s) require a recorded consent from ${request.subjectName}.`,
+        'CONSENT',
+        blockedOnConsent.map((check) => requireCheckDefinition(check.checkCode).label),
+        id,
+      );
+    }
+    const outstanding = this.outstandingDocuments(id);
+    if (outstanding.length > 0) {
+      throw new VerificationBlockedError(
+        `Verification ${request.bidId} cannot start: ${request.subjectName} has not yet provided ${outstanding
+          .map((document) => `"${document.label}"`)
+          .join(', ')}.`,
+        'DOCUMENTS',
+        outstanding.map((document) => document.label),
+        id,
       );
     }
     const next = this.transition(id, 'IN_PROGRESS', undefined, actor);
@@ -516,6 +690,21 @@ export class VerificationService {
   }
 
   async runAllChecks(id: string): Promise<VerificationRequest> {
+    const request = this.ctx.store.verificationRequests.require(id);
+    // Fail loudly rather than quietly producing a partial assessment: a
+    // verification missing its paperwork is not a verification with a low score.
+    const blockedOnDocuments = this.checks(id).filter((c) => c.status === 'BLOCKED_ON_DOCUMENT');
+    if (blockedOnDocuments.length > 0) {
+      const outstanding = this.outstandingDocuments(id);
+      throw new VerificationBlockedError(
+        `Verification ${request.bidId} is waiting on ${outstanding.length} document(s) from ${request.subjectName}: ${outstanding
+          .map((document) => document.label)
+          .join(', ')}.`,
+        'DOCUMENTS',
+        outstanding.map((document) => document.label),
+        id,
+      );
+    }
     // eslint-disable-next-line no-constant-condition
     while (true) {
       const next = await this.runNextCheck(id);
