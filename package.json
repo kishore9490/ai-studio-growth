@@ -1,0 +1,28 @@
+{
+  "name": "bid-trust",
+  "private": true,
+  "version": "0.1.0",
+  "description": "BID Trust — Business Identity & Due Diligence. Trust, backed by verification.",
+  "license": "UNLICENSED",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build:core": "npm run build --workspace @bid/core",
+    "build:web": "npm run build --workspace @bid/web",
+    "build:api": "npm run build --workspace @bid/api",
+    "build": "npm run build:core && npm run build:api && npm run build:web",
+    "dev": "npm run dev --workspace @bid/web",
+    "dev:api": "npm run dev --workspace @bid/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run typecheck"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}
