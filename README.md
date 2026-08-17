@@ -51,7 +51,7 @@ npm run dev
 # REST API → http://localhost:4000
 npm run dev:api
 
-# Everything: typecheck, tests, production builds
+# Everything: typecheck, tests (25 across core and API), production builds
 npm run typecheck
 npm test
 npm run build

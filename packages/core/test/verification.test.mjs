@@ -198,3 +198,24 @@ test('rejecting a document re-blocks the checks that needed it', async () => {
     'the affected checks are blocked again',
   );
 });
+
+test('a consent-blocked run refuses instead of producing a partial assessment', async () => {
+  const { platform, requester, workspace } = await makePlatform();
+  const bgvPolicy = platform.policies.createFromTemplate(getPolicyTemplate('CANDIDATE_BGV'), {
+    workspaceId: workspace.id,
+    createdBy: 'test',
+  });
+  const person = platform.organizations.createPerson({ fullName: 'Blocked Candidate', email: 'b@example.com', phone: '9000000000' });
+  const request = platform.verifications.create({
+    workspaceId: workspace.id,
+    requesterOrganizationId: requester.id,
+    subjectType: 'PERSON',
+    subjectPersonId: person.id,
+    subjectName: person.fullName,
+    relationshipType: 'CANDIDATE',
+    policyId: bgvPolicy.id,
+  });
+
+  await assert.rejects(() => platform.verifications.runAllChecks(request.id), /require a recorded consent/);
+  assert.equal(platform.verifications.assessment(request.id), undefined, 'no assessment is produced for a blocked run');
+});

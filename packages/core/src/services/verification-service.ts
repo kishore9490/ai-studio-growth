@@ -692,7 +692,17 @@ export class VerificationService {
   async runAllChecks(id: string): Promise<VerificationRequest> {
     const request = this.ctx.store.verificationRequests.require(id);
     // Fail loudly rather than quietly producing a partial assessment: a
-    // verification missing its paperwork is not a verification with a low score.
+    // verification missing its consent or paperwork is not a verification with a
+    // low score.
+    const blockedOnConsent = this.checks(id).filter((c) => c.status === 'BLOCKED_ON_CONSENT');
+    if (blockedOnConsent.length > 0) {
+      throw new VerificationBlockedError(
+        `Verification ${request.bidId} cannot run: ${blockedOnConsent.length} check(s) require a recorded consent from ${request.subjectName}.`,
+        'CONSENT',
+        blockedOnConsent.map((check) => requireCheckDefinition(check.checkCode).label),
+        id,
+      );
+    }
     const blockedOnDocuments = this.checks(id).filter((c) => c.status === 'BLOCKED_ON_DOCUMENT');
     if (blockedOnDocuments.length > 0) {
       const outstanding = this.outstandingDocuments(id);
