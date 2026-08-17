@@ -468,9 +468,18 @@ export function Tabs({
   );
 }
 
-export function TabPanel({ id, children }: { id: string; children: ReactNode }) {
+/**
+ * Renders when the active tab matches `id`.
+ *
+ * `current` is passed explicitly so panels can live outside the <Tabs> subtree —
+ * which they usually do, because the tab strip and its content are often in
+ * different layout containers. The context is used only as a fallback for panels
+ * nested inside <Tabs>.
+ */
+export function TabPanel({ id, current, children }: { id: string; current?: string; children: ReactNode }) {
   const context = useContext(TabsContext);
-  if (!context || context.value !== id) return null;
+  const active = current ?? context?.value;
+  if (active !== id) return null;
   return <div className="animate-fade-in pt-4">{children}</div>;
 }
 

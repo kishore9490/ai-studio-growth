@@ -1,0 +1,1167 @@
+// BID Trust — PostgreSQL data model.
+//
+// This schema is the production target for the domain implemented in
+// packages/core. The in-memory store used by the demo mirrors these tables and
+// relations one-for-one, so moving to Prisma is a repository swap rather than a
+// domain rewrite.
+//
+//   npx prisma migrate dev --name init
+//   npx prisma generate
+//
+// Conventions:
+//   * snake_case table names, camelCase fields
+//   * every tenant-owned table carries workspaceId and is indexed on it
+//   * identity/history tables are retained rather than deleted (retention policy)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/* ------------------------------------------------------------------ */
+/* Enums                                                               */
+/* ------------------------------------------------------------------ */
+
+enum OrganizationLifecycle {
+  DISCOVERED
+  INVITED
+  CLAIMED
+  REGISTERED
+  VERIFIED
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum CommercialState {
+  NON_MEMBER
+  MEMBER
+  VERIFIED_MEMBER
+  REQUESTER
+  CUSTOMER
+  ENTERPRISE
+}
+
+enum CustomerLifecycleState {
+  UNKNOWN
+  INVITED
+  REGISTERED
+  BID_MEMBER
+  VERIFICATION_IN_PROGRESS
+  VERIFIED_MEMBER
+  DISCOVERY
+  REQUESTER_ACTIVATION
+  FIRST_VERIFICATION
+  PAID_CUSTOMER
+  ACTIVE
+  EXPANDING
+  ENTERPRISE
+  NETWORK_PARTICIPANT
+  LOW_USAGE
+  AT_RISK
+  DORMANT
+  CHURNED
+  WIN_BACK
+}
+
+enum RelationshipLifecycle {
+  DISCOVERED
+  INVITED
+  VERIFICATION
+  ASSESSMENT
+  PENDING_APPROVAL
+  ACTIVE
+  MONITORED
+  SUSPENDED
+  TERMINATED
+  ARCHIVED
+}
+
+enum VerificationLifecycle {
+  REQUESTED
+  INVITED
+  ACCEPTED
+  CONSENT_PENDING
+  IN_PROGRESS
+  CHECKS_RUNNING
+  EVIDENCE_COLLECTED
+  ASSESSMENT
+  REVIEW
+  COMPLETED
+  CREDENTIAL_ISSUED
+  MONITORING
+  FAILED
+  PARTIAL
+  EXPIRED
+  REQUIRES_REVIEW
+  REVOKED
+}
+
+enum RelationshipType {
+  VENDOR
+  SUPPLIER
+  CUSTOMER
+  PARTNER
+  CONTRACTOR
+  CONSULTANT
+  DISTRIBUTOR
+  SERVICE_PROVIDER
+  EMPLOYER
+  CANDIDATE
+  VERIFIED_BY
+}
+
+enum SubjectType {
+  ORGANIZATION
+  PERSON
+}
+
+enum RiskLevel {
+  LOW
+  STANDARD
+  HIGH
+  CRITICAL
+}
+
+enum AssessmentBand {
+  LOW_RISK
+  MODERATE_RISK
+  ELEVATED_RISK
+  HIGH_RISK
+  INSUFFICIENT_EVIDENCE
+}
+
+enum CheckCategory {
+  IDENTITY
+  COMPLIANCE
+  FINANCIAL
+  RISK
+  CREDENTIAL
+  PEOPLE
+}
+
+enum CheckStatus {
+  PLANNED
+  BLOCKED_ON_CONSENT
+  BLOCKED_ON_DOCUMENT
+  RUNNING
+  PASSED
+  ATTENTION
+  FAILED
+  UNAVAILABLE
+  SKIPPED
+}
+
+enum Attribution {
+  COMPANY_PROVIDED
+  BID_VERIFIED
+  PROVIDER_VERIFIED
+  OFFICIAL_SOURCE_DERIVED
+}
+
+enum Visibility {
+  PUBLIC
+  ORGANIZATION_ONLY
+  RELATIONSHIP_ONLY
+  AUTHORIZED_ONLY
+  SENSITIVE
+  RESTRICTED
+}
+
+enum Freshness {
+  CURRENT
+  AGING
+  STALE
+  EXPIRED
+}
+
+enum ProviderCapability {
+  IDENTITY
+  KYB
+  BGV
+  BANK
+  EDUCATION
+  EMPLOYMENT
+  DOCUMENT
+  RISK
+}
+
+enum ConsentStatus {
+  REQUESTED
+  GRANTED
+  DECLINED
+  EXPIRED
+  REVOKED
+}
+
+enum AuthorizationStatus {
+  REQUESTED
+  GRANTED
+  DECLINED
+  EXPIRED
+  REVOKED
+}
+
+enum CredentialStatus {
+  ACTIVE
+  EXPIRING
+  EXPIRED
+  REVOKED
+  SUPERSEDED
+}
+
+enum MonitoringSeverity {
+  INFO
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum MonitoringFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+  EVENT_DRIVEN
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  IN_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum PlanTier {
+  MEMBER_FREE
+  STARTER
+  GROWTH
+  BUSINESS
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  NONE
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+  OVERDUE
+  VOID
+}
+
+enum Decision {
+  APPROVED
+  APPROVED_WITH_CONDITIONS
+  REJECTED
+  PENDING
+}
+
+/* ------------------------------------------------------------------ */
+/* Identity                                                            */
+/* ------------------------------------------------------------------ */
+
+/// Sequence allocator per BID namespace (BUS, PER, CRD, REL, POL, VER, CMP).
+model BidIdSequence {
+  namespace String @id
+  current   Int    @default(0)
+
+  @@map("bid_ids")
+}
+
+model Organization {
+  id                 String                @id @default(cuid())
+  bidId              String                @unique
+  legalName          String
+  displayName        String
+  description        String?
+  website            String?
+  logoText           String
+  logoColor          String
+  industry           String
+  country            String                @default("IN")
+  city               String?
+  registeredAddress  String?
+  employeeBand       String?
+  incorporationYear  Int?
+  lifecycle          OrganizationLifecycle @default(DISCOVERED)
+  commercialState    CommercialState       @default(NON_MEMBER)
+  primaryWorkspaceId String?
+  claimedAt          DateTime?
+  introducedByOrgId  String?
+  tags               String[]
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  introducedBy          Organization?            @relation("Introductions", fields: [introducedByOrgId], references: [id])
+  introduced            Organization[]           @relation("Introductions")
+  identifiers           OrganizationIdentifier[]
+  workspaces            Workspace[]
+  outboundRelationships Relationship[]           @relation("RelationshipSource")
+  inboundRelationships  Relationship[]           @relation("RelationshipTarget")
+  invitationsSent       Invitation[]             @relation("InvitationFrom")
+  invitationsReceived   Invitation[]             @relation("InvitationTo")
+  requestedVerifications VerificationRequest[]   @relation("VerificationRequester")
+  subjectVerifications  VerificationRequest[]    @relation("VerificationSubject")
+  credentials           Credential[]             @relation("CredentialSubjectOrg")
+  issuedCredentials     Credential[]             @relation("CredentialIssuer")
+  customerLifecycle     CustomerLifecycle?
+  supportCases          SupportCase[]
+  subscriptions         Subscription[]
+  invoices              Invoice[]
+
+  @@index([commercialState])
+  @@index([lifecycle])
+  @@index([introducedByOrgId])
+  @@map("organizations")
+}
+
+model OrganizationIdentifier {
+  id             String      @id @default(cuid())
+  organizationId String
+  kind           String
+  /// Encrypted at rest; never returned unmasked to a non-owner.
+  value          String
+  attribution    Attribution @default(COMPANY_PROVIDED)
+  visibility     Visibility  @default(RELATIONSHIP_ONLY)
+  verifiedAt     DateTime?
+  createdAt      DateTime    @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("organization_identifiers")
+}
+
+model Person {
+  id          String   @id @default(cuid())
+  bidId       String   @unique
+  fullName    String
+  /// Personal contact details are stored encrypted and surfaced masked.
+  emailHash   String
+  emailMasked String
+  phoneMasked String
+  city        String?
+  country     String   @default("IN")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users                 User[]
+  subjectVerifications  VerificationRequest[]
+  credentials           Credential[]
+
+  @@map("persons")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  passwordHash  String?
+  personId      String?
+  platformRoles String[]
+  mfaEnabled    Boolean   @default(false)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  person      Person?               @relation(fields: [personId], references: [id])
+  memberships WorkspaceMembership[]
+
+  @@map("users")
+}
+
+/// The tenant boundary. An organization identity is global; a workspace is private.
+model Workspace {
+  id               String   @id @default(cuid())
+  tenantId         String   @unique
+  organizationId   String
+  name             String
+  requesterEnabled Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  organization    Organization          @relation(fields: [organizationId], references: [id])
+  memberships     WorkspaceMembership[]
+  relationships   Relationship[]
+  invitations     Invitation[]
+  policies        Policy[]
+  verifications   VerificationRequest[]
+  campaigns       Campaign[]
+  monitoringRules MonitoringRule[]
+  monitoringEvents MonitoringEvent[]
+  subscriptions   Subscription[]
+  usage           UsageRecord[]
+  creditWallet    CreditWallet?
+  invoices        Invoice[]
+  apiKeys         ApiKey[]
+  webhooks        WebhookEndpoint[]
+  auditLogs       AuditLog[]
+
+  @@index([organizationId])
+  @@map("workspaces")
+}
+
+model WorkspaceMembership {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  roles       String[]
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@map("workspace_memberships")
+}
+
+/* ------------------------------------------------------------------ */
+/* Relationships                                                       */
+/* ------------------------------------------------------------------ */
+
+model Relationship {
+  id                    String                @id @default(cuid())
+  bidId                 String                @unique
+  workspaceId           String
+  sourceOrganizationId  String
+  targetType            SubjectType           @default(ORGANIZATION)
+  targetOrganizationId  String?
+  targetPersonId        String?
+  type                  RelationshipType
+  label                 String?
+  startDate             DateTime?
+  endDate               DateTime?
+  lifecycle             RelationshipLifecycle @default(DISCOVERED)
+  riskLevel             RiskLevel             @default(STANDARD)
+  criticality           String?
+  policyId              String?
+  latestVerificationId  String?
+  verificationStatus    String                @default("NONE")
+  contractReference     String?
+  monitoringEnabled     Boolean               @default(false)
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  workspace          Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sourceOrganization Organization          @relation("RelationshipSource", fields: [sourceOrganizationId], references: [id])
+  targetOrganization Organization?         @relation("RelationshipTarget", fields: [targetOrganizationId], references: [id])
+  policy             Policy?               @relation(fields: [policyId], references: [id])
+  verifications      VerificationRequest[]
+  monitoringRules    MonitoringRule[]
+  roles              RelationshipRole[]
+
+  @@index([workspaceId])
+  @@index([sourceOrganizationId])
+  @@index([targetOrganizationId])
+  @@index([lifecycle])
+  @@map("relationships")
+}
+
+/// Optional per-relationship role assignments (e.g. relationship owner, approver).
+model RelationshipRole {
+  id             String   @id @default(cuid())
+  relationshipId String
+  userId         String
+  role           String
+  createdAt      DateTime @default(now())
+
+  relationship Relationship @relation(fields: [relationshipId], references: [id], onDelete: Cascade)
+
+  @@unique([relationshipId, userId, role])
+  @@map("relationship_roles")
+}
+
+model Invitation {
+  id                  String    @id @default(cuid())
+  workspaceId         String
+  fromOrganizationId  String
+  toOrganizationName  String
+  toOrganizationId    String?
+  toEmail             String
+  relationshipType    RelationshipType
+  policyId            String
+  campaignId          String?
+  status              String    @default("CREATED")
+  token               String    @unique
+  message             String?
+  createdAt           DateTime  @default(now())
+  sentAt              DateTime?
+  acceptedAt          DateTime?
+  expiresAt           DateTime
+
+  workspace        Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  fromOrganization Organization  @relation("InvitationFrom", fields: [fromOrganizationId], references: [id])
+  toOrganization   Organization? @relation("InvitationTo", fields: [toOrganizationId], references: [id])
+  policy           Policy        @relation(fields: [policyId], references: [id])
+  campaign         Campaign?     @relation(fields: [campaignId], references: [id])
+
+  @@index([workspaceId])
+  @@index([toOrganizationId])
+  @@map("invitations")
+}
+
+model Authorization {
+  id                     String              @id @default(cuid())
+  grantorOrganizationId  String
+  granteeOrganizationId  String
+  operation              String
+  scope                  String[]
+  relationshipId         String?
+  status                 AuthorizationStatus @default(REQUESTED)
+  startAt                DateTime
+  endAt                  DateTime
+  revokedAt              DateTime?
+  createdAt              DateTime            @default(now())
+
+  @@index([grantorOrganizationId])
+  @@index([granteeOrganizationId])
+  @@map("authorizations")
+}
+
+/* ------------------------------------------------------------------ */
+/* Policy                                                              */
+/* ------------------------------------------------------------------ */
+
+model Policy {
+  id               String           @id @default(cuid())
+  bidId            String           @unique
+  /// Null means a BID-published template available to every tenant.
+  workspaceId      String?
+  name             String
+  description      String
+  subjectType      SubjectType      @default(ORGANIZATION)
+  relationshipType RelationshipType
+  industry         String
+  riskLevel        RiskLevel
+  currentVersion   Int              @default(1)
+  system           Boolean          @default(false)
+  createdBy        String
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  workspace     Workspace?            @relation(fields: [workspaceId], references: [id])
+  versions      PolicyVersion[]
+  relationships Relationship[]
+  verifications VerificationRequest[]
+  invitations   Invitation[]
+  campaigns     Campaign[]
+  credentials   Credential[]
+
+  @@index([workspaceId])
+  @@map("policies")
+}
+
+/// Immutable once sealed: a sealed version has justified a completed decision.
+model PolicyVersion {
+  id                  String              @id @default(cuid())
+  policyId            String
+  version             Int
+  requiredChecks      Json
+  optionalChecks      Json
+  documents           Json
+  thresholds          Json
+  validityDays        Int
+  reverificationDays  Int
+  monitoringFrequency MonitoringFrequency
+  approvalRule        String
+  requiresConsent     Boolean             @default(false)
+  notes               String?
+  sealedAt            DateTime?
+  createdAt           DateTime            @default(now())
+
+  policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@unique([policyId, version])
+  @@map("policy_versions")
+}
+
+/* ------------------------------------------------------------------ */
+/* Verification                                                        */
+/* ------------------------------------------------------------------ */
+
+model VerificationRequest {
+  id                      String                @id @default(cuid())
+  bidId                   String                @unique
+  workspaceId             String
+  requesterOrganizationId String
+  subjectType             SubjectType           @default(ORGANIZATION)
+  subjectOrganizationId   String?
+  subjectPersonId         String?
+  subjectName             String
+  relationshipId          String?
+  relationshipType        RelationshipType
+  campaignId              String?
+  policyId                String
+  policyVersion           Int
+  status                  VerificationLifecycle @default(REQUESTED)
+  consentId               String?
+  authorizationId         String?
+  decision                Decision              @default(PENDING)
+  decisionBy              String?
+  decisionAt              DateTime?
+  decisionNote            String?
+  slaDueAt                DateTime
+  completedAt             DateTime?
+  expiresAt               DateTime?
+  costPaise               Int                   @default(0)
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+
+  workspace            Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  requesterOrganization Organization       @relation("VerificationRequester", fields: [requesterOrganizationId], references: [id])
+  subjectOrganization  Organization?       @relation("VerificationSubject", fields: [subjectOrganizationId], references: [id])
+  subjectPerson        Person?             @relation(fields: [subjectPersonId], references: [id])
+  relationship         Relationship?       @relation(fields: [relationshipId], references: [id])
+  campaign             Campaign?           @relation(fields: [campaignId], references: [id])
+  policy               Policy              @relation(fields: [policyId], references: [id])
+  consent              Consent?            @relation(fields: [consentId], references: [id])
+  checks               VerificationCheck[]
+  results              VerificationResult[]
+  evidence             Evidence[]
+  assessment           RiskAssessment?
+  credential           Credential?
+  providerTransactions ProviderTransaction[]
+
+  @@index([workspaceId])
+  @@index([subjectOrganizationId])
+  @@index([status])
+  @@index([campaignId])
+  @@map("verification_requests")
+}
+
+model VerificationCheck {
+  id                    String        @id @default(cuid())
+  verificationRequestId String
+  checkCode             String
+  category              CheckCategory
+  required              Boolean       @default(true)
+  blocking              Boolean       @default(false)
+  status                CheckStatus   @default(PLANNED)
+  providerId            String?
+  providerTransactionId String?
+  startedAt             DateTime?
+  completedAt           DateTime?
+  attempts              Int           @default(0)
+  costPaise             Int           @default(0)
+
+  request VerificationRequest  @relation(fields: [verificationRequestId], references: [id], onDelete: Cascade)
+  result  VerificationResult?
+  evidence Evidence?
+
+  @@index([verificationRequestId])
+  @@index([status])
+  @@map("verification_checks")
+}
+
+model VerificationResult {
+  id                    String   @id @default(cuid())
+  verificationRequestId String
+  checkId               String   @unique
+  checkCode             String
+  outcome               String
+  confidence            Float
+  summary               String
+  normalized            Json
+  createdAt             DateTime @default(now())
+
+  request VerificationRequest @relation(fields: [verificationRequestId], references: [id], onDelete: Cascade)
+  check   VerificationCheck   @relation(fields: [checkId], references: [id], onDelete: Cascade)
+
+  @@index([verificationRequestId])
+  @@map("verification_results")
+}
+
+/// Provenance for a single check. Append-only.
+model Evidence {
+  id                    String      @id @default(cuid())
+  verificationRequestId String
+  checkId               String      @unique
+  checkCode             String
+  subjectType           SubjectType
+  subjectRef            String
+  what                  String
+  source                String
+  attribution           Attribution
+  providerId            String
+  providerName          String
+  method                String
+  checkedAt             DateTime
+  result                String
+  confidence            Float
+  scope                 String
+  reference             String
+  payloadHash           String
+  expiresAt             DateTime
+  freshness             Freshness   @default(CURRENT)
+  policyId              String
+  policyVersion         Int
+  visibility            Visibility
+  auditLogId            String?
+  createdAt             DateTime    @default(now())
+
+  request VerificationRequest @relation(fields: [verificationRequestId], references: [id], onDelete: Cascade)
+  check   VerificationCheck   @relation(fields: [checkId], references: [id], onDelete: Cascade)
+
+  @@index([verificationRequestId])
+  @@index([subjectRef])
+  @@index([visibility])
+  @@map("evidence")
+}
+
+model RiskAssessment {
+  id                    String         @id @default(cuid())
+  verificationRequestId String         @unique
+  band                  AssessmentBand
+  score                 Int
+  categories            Json
+  missingChecks         String[]
+  failedChecks          String[]
+  attentionChecks       String[]
+  freshness             Freshness
+  policyId              String
+  policyVersion         Int
+  explanation           String
+  disclaimer            String
+  expiresAt             DateTime
+  createdAt             DateTime       @default(now())
+
+  request VerificationRequest @relation(fields: [verificationRequestId], references: [id], onDelete: Cascade)
+
+  @@map("risk_assessments")
+}
+
+model Credential {
+  id                      String           @id @default(cuid())
+  bidId                   String           @unique
+  subjectType             SubjectType
+  subjectOrganizationId   String?
+  subjectPersonId         String?
+  verificationRequestId   String           @unique
+  policyId                String
+  policyVersion           Int
+  title                   String
+  publicAttributes        Json
+  issuedByOrganizationId  String?
+  status                  CredentialStatus @default(ACTIVE)
+  issuedAt                DateTime         @default(now())
+  expiresAt               DateTime
+  revokedAt               DateTime?
+  revocationReason        String?
+
+  subjectOrganization Organization?       @relation("CredentialSubjectOrg", fields: [subjectOrganizationId], references: [id])
+  subjectPerson       Person?             @relation(fields: [subjectPersonId], references: [id])
+  issuedBy            Organization?       @relation("CredentialIssuer", fields: [issuedByOrganizationId], references: [id])
+  policy              Policy              @relation(fields: [policyId], references: [id])
+  request             VerificationRequest @relation(fields: [verificationRequestId], references: [id])
+
+  @@index([subjectOrganizationId])
+  @@index([status])
+  @@map("credentials")
+}
+
+/// A person permitting processing. Distinct from Authorization.
+model Consent {
+  id                        String        @id @default(cuid())
+  subjectType               SubjectType
+  subjectRef                String
+  subjectName               String
+  purpose                   String
+  scope                     String[]
+  version                   String
+  status                    ConsentStatus @default(REQUESTED)
+  requestedByOrganizationId String
+  requestedAt               DateTime      @default(now())
+  grantedAt                 DateTime?
+  revokedAt                 DateTime?
+  expiresAt                 DateTime
+  evidenceReference         String?
+
+  verifications VerificationRequest[]
+
+  @@index([subjectRef])
+  @@map("consents")
+}
+
+/* ------------------------------------------------------------------ */
+/* Campaigns & monitoring                                              */
+/* ------------------------------------------------------------------ */
+
+model Campaign {
+  id                      String           @id @default(cuid())
+  bidId                   String           @unique
+  workspaceId             String
+  requesterOrganizationId String
+  name                    String
+  policyId                String
+  relationshipType        RelationshipType
+  status                  String           @default("DRAFT")
+  slaDays                 Int              @default(14)
+  createdAt               DateTime         @default(now())
+  completedAt             DateTime?
+
+  workspace     Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  policy        Policy                @relation(fields: [policyId], references: [id])
+  members       CampaignMember[]
+  invitations   Invitation[]
+  verifications VerificationRequest[]
+
+  @@index([workspaceId])
+  @@map("campaigns")
+}
+
+model CampaignMember {
+  id                    String   @id @default(cuid())
+  campaignId            String
+  targetName            String
+  targetEmail           String
+  targetOrganizationId  String?
+  invitationId          String?
+  verificationRequestId String?
+  state                 String   @default("PENDING_INVITE")
+  createdAt             DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@map("campaign_members")
+}
+
+model MonitoringRule {
+  id             String              @id @default(cuid())
+  workspaceId    String
+  subjectType    SubjectType         @default(ORGANIZATION)
+  subjectRef     String
+  relationshipId String?
+  signals        String[]
+  frequency      MonitoringFrequency @default(QUARTERLY)
+  active         Boolean             @default(true)
+  lastRunAt      DateTime?
+  createdAt      DateTime            @default(now())
+
+  workspace    Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  relationship Relationship?     @relation(fields: [relationshipId], references: [id])
+  events       MonitoringEvent[]
+
+  @@unique([workspaceId, subjectRef])
+  @@index([workspaceId])
+  @@map("monitoring_rules")
+}
+
+model MonitoringEvent {
+  id                String             @id @default(cuid())
+  ruleId            String?
+  workspaceId       String
+  subjectType       SubjectType        @default(ORGANIZATION)
+  subjectRef        String
+  subjectName       String
+  signal            String
+  severity          MonitoringSeverity
+  title             String
+  detail            String
+  source            String
+  status            AlertStatus        @default(OPEN)
+  relationshipId    String?
+  recommendedAction String
+  detectedAt        DateTime           @default(now())
+  resolvedAt        DateTime?
+
+  rule      MonitoringRule? @relation(fields: [ruleId], references: [id])
+  workspace Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, status])
+  @@index([subjectRef])
+  @@map("monitoring_events")
+}
+
+/* ------------------------------------------------------------------ */
+/* Providers                                                           */
+/* ------------------------------------------------------------------ */
+
+model Provider {
+  id             String               @id
+  name           String
+  capabilities   ProviderCapability[]
+  countries      String[]
+  costMultiplier Float                @default(1)
+  slaHours       Int
+  qualityScore   Int
+  priority       Int
+  enabled        Boolean              @default(true)
+  description    String
+  /// Reference to the credential in the secrets manager — never the secret itself.
+  secretRef      String?
+
+  transactions ProviderTransaction[]
+
+  @@map("providers")
+}
+
+model ProviderTransaction {
+  id                    String   @id @default(cuid())
+  providerId            String
+  verificationRequestId String
+  checkId               String
+  checkCode             String
+  requestedAt           DateTime
+  completedAt           DateTime
+  latencyMs             Int
+  outcome               String
+  costPaise             Int
+  reference             String
+  fallbackFrom          String?
+
+  provider Provider            @relation(fields: [providerId], references: [id])
+  request  VerificationRequest @relation(fields: [verificationRequestId], references: [id], onDelete: Cascade)
+
+  @@index([providerId])
+  @@index([verificationRequestId])
+  @@map("provider_transactions")
+}
+
+/* ------------------------------------------------------------------ */
+/* Commerce                                                            */
+/* ------------------------------------------------------------------ */
+
+model Plan {
+  id                   String   @id
+  tier                 PlanTier
+  name                 String
+  monthlyPricePaise    Int
+  includedChecks       Int
+  overagePerCheckPaise Int
+  entitlements         Json
+  description          String
+  highlights           String[]
+  quoteOnly            Boolean  @default(false)
+  active               Boolean  @default(true)
+
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id               String             @id @default(cuid())
+  workspaceId      String
+  organizationId   String
+  planId           String
+  status           SubscriptionStatus @default(ACTIVE)
+  seats            Int                @default(3)
+  monitoredEntities Int               @default(0)
+  startedAt        DateTime           @default(now())
+  renewsAt         DateTime
+  cancelledAt      DateTime?
+
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id])
+  plan         Plan         @relation(fields: [planId], references: [id])
+
+  @@index([workspaceId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model UsageRecord {
+  id          String   @id @default(cuid())
+  workspaceId String
+  period      String
+  metric      String
+  quantity    Int
+  amountPaise Int
+  reference   String?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, period])
+  @@map("usage")
+}
+
+model CreditWallet {
+  id          String   @id @default(cuid())
+  workspaceId String   @unique
+  balance     Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  entries   CreditLedgerEntry[]
+
+  @@map("credit_wallets")
+}
+
+model CreditLedgerEntry {
+  id        String   @id @default(cuid())
+  walletId  String
+  delta     Int
+  reason    String
+  reference String?
+  createdAt DateTime @default(now())
+
+  wallet CreditWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@map("credits")
+}
+
+model Invoice {
+  id             String        @id @default(cuid())
+  workspaceId    String
+  organizationId String
+  number         String        @unique
+  period         String
+  status         InvoiceStatus @default(DRAFT)
+  lines          Json
+  subtotalPaise  Int
+  taxPaise       Int
+  totalPaise     Int
+  issuedAt       DateTime      @default(now())
+  dueAt          DateTime
+  paidAt         DateTime?
+
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id])
+  payments     Payment[]
+
+  @@index([workspaceId, period])
+  @@map("invoices")
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  workspaceId String
+  amountPaise Int
+  method      String
+  reference   String
+  receivedAt  DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@map("payments")
+}
+
+/* ------------------------------------------------------------------ */
+/* Customer success & platform                                         */
+/* ------------------------------------------------------------------ */
+
+model CustomerLifecycle {
+  id             String                 @id @default(cuid())
+  organizationId String                 @unique
+  workspaceId    String?
+  state          CustomerLifecycleState @default(UNKNOWN)
+  enteredAt      DateTime               @default(now())
+  history        Json
+  healthScore    Int                    @default(50)
+  signals        Json
+  ownerName      String                 @default("Unassigned")
+  notes          String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([state])
+  @@map("customer_lifecycle")
+}
+
+model SupportCase {
+  id             String   @id @default(cuid())
+  organizationId String
+  subject        String
+  priority       String   @default("NORMAL")
+  status         String   @default("OPEN")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("support_cases")
+}
+
+model Notification {
+  id             String   @id @default(cuid())
+  workspaceId    String?
+  organizationId String?
+  channel        String   @default("IN_APP")
+  kind           String
+  title          String
+  body           String
+  link           String?
+  severity       String   @default("INFO")
+  read           Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  @@index([workspaceId, read])
+  @@index([organizationId, read])
+  @@map("notifications")
+}
+
+/// Hash-chained, append-only. Never updated or deleted.
+model AuditLog {
+  id             String   @id @default(cuid())
+  at             DateTime @default(now())
+  actorType      String
+  actorId        String
+  actorName      String
+  workspaceId    String?
+  organizationId String?
+  action         String
+  resourceType   String
+  resourceId     String
+  summary        String
+  metadata       Json
+  hash           String
+  previousHash   String
+
+  workspace Workspace? @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId, at])
+  @@index([resourceId])
+  @@index([action])
+  @@map("audit_logs")
+}
+
+model ApiKey {
+  id           String    @id @default(cuid())
+  workspaceId  String
+  name         String
+  prefix       String    @unique
+  hashedSecret String
+  scopes       String[]
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+  revokedAt    DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@map("api_keys")
+}
+
+model WebhookEndpoint {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  url          String
+  events       String[]
+  active       Boolean  @default(true)
+  secretHash   String
+  createdAt    DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@map("webhooks")
+}

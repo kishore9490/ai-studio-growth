@@ -58,7 +58,7 @@ export function SettingsPage() {
         ]}
       />
 
-      <TabPanel id="team">
+      <TabPanel id="team" current={tab}>
         <Card padded={false}>
           <div className="overflow-x-auto">
             <table className="bid-table">
@@ -123,7 +123,7 @@ export function SettingsPage() {
         </Card>
       </TabPanel>
 
-      <TabPanel id="api">
+      <TabPanel id="api" current={tab}>
         <div className="grid gap-4 lg:grid-cols-2">
           <Card padded={false}>
             <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
@@ -182,7 +182,7 @@ export function SettingsPage() {
         </Callout>
       </TabPanel>
 
-      <TabPanel id="authorizations">
+      <TabPanel id="authorizations" current={tab}>
         <Card padded={false}>
           <div className="border-b border-slate-200 px-4 py-3">
             <SectionHeading
@@ -228,7 +228,7 @@ export function SettingsPage() {
         </Card>
       </TabPanel>
 
-      <TabPanel id="security">
+      <TabPanel id="security" current={tab}>
         <Card>
           <SectionHeading title="Security architecture" description="How the platform protects tenant data." />
           <div className="mt-3">

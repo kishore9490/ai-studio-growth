@@ -518,7 +518,8 @@ export class BidPlatform {
     if (relationship) this.relationships.transition(relationship.id, 'VERIFICATION', 'subject accepted invitation');
 
     this.notifyChange();
-    return { organization, workspace, verification };
+    // Re-read: claiming mutated lifecycle and commercial state.
+    return { organization: this.organizations.require(organization.id), workspace, verification };
   }
 
   /** Runs every planned check and produces the assessment. */

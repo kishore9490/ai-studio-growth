@@ -1,0 +1,56 @@
+# BID Trust — local stack.
+#
+#   docker compose up --build
+#     web → http://localhost:8080
+#     api → http://localhost:4000
+#     db  → postgres://bid:bid@localhost:5432/bidtrust
+#
+# The API currently runs against in-memory repositories seeded with the demo
+# network; PostgreSQL is included because prisma/schema.prisma is the target
+# schema and migrations land next (see docs/ROADMAP.md).
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bid
+      POSTGRES_PASSWORD: bid
+      POSTGRES_DB: bidtrust
+    ports:
+      - "5432:5432"
+    volumes:
+      - bid-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bid -d bidtrust"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: "4000"
+      HOST: 0.0.0.0
+      DATABASE_URL: postgresql://bid:bid@db:5432/bidtrust
+      CORS_ORIGINS: http://localhost:8080
+      PUBLIC_BASE_URL: https://bidtrust.in
+    ports:
+      - "4000:4000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  bid-db:

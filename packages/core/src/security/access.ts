@@ -103,7 +103,21 @@ const ROLE_PERMISSIONS: Record<WorkspaceRole, Permission[]> = {
     'campaign:write',
   ],
   VIEWER: ['org:read', 'relationship:read', 'policy:read', 'verification:read'],
-  API_CLIENT: ['org:read', 'relationship:read', 'policy:read', 'verification:read', 'verification:initiate'],
+  // Integration clients can do what an onboarding workflow needs, and no more:
+  // they can create relationships, invite counterparties and start
+  // verifications, but they cannot decide outcomes, manage billing or issue keys.
+  API_CLIENT: [
+    'org:read',
+    'relationship:read',
+    'relationship:write',
+    'invitation:send',
+    'policy:read',
+    'verification:read',
+    'verification:initiate',
+    'evidence:read',
+    'campaign:write',
+    'monitoring:write',
+  ],
 };
 
 /** Permissions gated by a paid entitlement in addition to a role (Rule 1). */

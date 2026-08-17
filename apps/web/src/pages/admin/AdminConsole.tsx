@@ -76,25 +76,25 @@ export function AdminConsole() {
           ]}
         />
 
-        <TabPanel id="overview">
+        <TabPanel id="overview" current={tab}>
           <OverviewTab />
         </TabPanel>
-        <TabPanel id="customers">
+        <TabPanel id="customers" current={tab}>
           <CustomersTab />
         </TabPanel>
-        <TabPanel id="revenue">
+        <TabPanel id="revenue" current={tab}>
           <RevenueTab />
         </TabPanel>
-        <TabPanel id="organizations">
+        <TabPanel id="organizations" current={tab}>
           <OrganizationsTab />
         </TabPanel>
-        <TabPanel id="providers">
+        <TabPanel id="providers" current={tab}>
           <ProvidersTab />
         </TabPanel>
-        <TabPanel id="pricing">
+        <TabPanel id="pricing" current={tab}>
           <PricingTab />
         </TabPanel>
-        <TabPanel id="operations">
+        <TabPanel id="operations" current={tab}>
           <OperationsTab />
         </TabPanel>
       </div>

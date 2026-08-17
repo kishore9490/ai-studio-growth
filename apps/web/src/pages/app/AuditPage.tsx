@@ -35,7 +35,7 @@ export function AuditPage() {
         ]}
       />
 
-      <TabPanel id="audit">
+      <TabPanel id="audit" current={tab}>
         <Card padded={false}>
           <div className="border-b border-slate-200 p-3">
             <div className="w-72">
@@ -81,7 +81,7 @@ export function AuditPage() {
         </Callout>
       </TabPanel>
 
-      <TabPanel id="events">
+      <TabPanel id="events" current={tab}>
         <Card padded={false}>
           <div className="max-h-[36rem] overflow-y-auto">
             <table className="bid-table">

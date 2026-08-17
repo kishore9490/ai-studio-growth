@@ -208,11 +208,11 @@ export function VerificationDetailPage() {
               />
             </div>
             <div className="px-4 pb-4">
-              <TabPanel id="checks">
+              <TabPanel id="checks" current={tab}>
                 <ChecksTable checks={checks} results={results} onSelect={setSelectedCheck} />
               </TabPanel>
 
-              <TabPanel id="assessment">
+              <TabPanel id="assessment" current={tab}>
                 {assessment ? (
                   <AssessmentPanel assessment={assessment} policyName={policy?.name ?? 'Policy'} />
                 ) : (
@@ -223,11 +223,11 @@ export function VerificationDetailPage() {
                 )}
               </TabPanel>
 
-              <TabPanel id="evidence">
+              <TabPanel id="evidence" current={tab}>
                 <EvidenceTable evidence={evidence} />
               </TabPanel>
 
-              <TabPanel id="providers">
+              <TabPanel id="providers" current={tab}>
                 <div className="overflow-x-auto">
                   <table className="bid-table">
                     <thead>
@@ -268,7 +268,7 @@ export function VerificationDetailPage() {
                 </Callout>
               </TabPanel>
 
-              <TabPanel id="audit">
+              <TabPanel id="audit" current={tab}>
                 <Timeline
                   items={auditEntries.map((entry) => ({
                     title: entry.summary,
