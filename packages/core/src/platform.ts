@@ -119,6 +119,40 @@ export class BidPlatform {
     this.wireEventConsumers();
   }
 
+  /**
+   * Re-establishes allocator and audit state after a restart.
+   *
+   * BID IDs and the audit head are re-derived from the records themselves, so
+   * they cannot drift out of step with the data. The surrogate-key counter is
+   * the one thing that has to be handed in: seeded records carry readable keys
+   * whose suffixes are indistinguishable from generated ones. Call this once,
+   * after hydration, before serving traffic.
+   */
+  resumeFromStore(checkpoint: { surrogateCounter?: number } = {}): void {
+    for (const collection of Object.values(this.store.collections())) {
+      for (const record of collection.all()) {
+        const bidId = (record as { bidId?: unknown }).bidId;
+        if (typeof bidId === 'string') this.context.bidIds.reserve(bidId);
+      }
+    }
+
+    if (checkpoint.surrogateCounter !== undefined) this.context.ids.restore(checkpoint.surrogateCounter);
+
+    const audits = this.store.auditLogs.all();
+    if (audits.length > 0) {
+      // The chain is append-only, so the entry no other entry points back to is
+      // its head — safer than trusting insertion order after a reload.
+      const referenced = new Set(audits.map((entry) => entry.previousHash));
+      const head = audits.find((entry) => !referenced.has(entry.hash));
+      if (head) this.context.resumeAuditChain(head.hash);
+    }
+  }
+
+  /** Allocator checkpoint the persistence layer stores alongside the data. */
+  idCheckpoint(): { surrogateCounter: number; bidSequences: Record<string, number> } {
+    return { surrogateCounter: this.context.ids.snapshot(), bidSequences: this.context.bidIds.snapshot() };
+  }
+
   /* ---------------- change notification (UI binding) ---------------- */
 
   onChange(listener: () => void): () => void {

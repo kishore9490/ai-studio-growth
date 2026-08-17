@@ -43,20 +43,48 @@ export interface Entity {
   id: string;
 }
 
+export type MutationKind = 'insert' | 'update' | 'remove';
+
+/**
+ * Receives every mutation applied to the store.
+ *
+ * The domain stays synchronous — services read and write an in-memory working
+ * set — while a sink durably records the same changes. That is what lets the
+ * identical engine run against PostgreSQL in the API process and against
+ * nothing at all in the browser demo.
+ */
+export interface MutationSink {
+  record(collection: string, kind: MutationKind, id: string, value?: unknown): void;
+}
+
 /**
  * A tiny repository abstraction. The in-memory implementation backs the browser
- * demo and the API's default profile; a Prisma-backed implementation can satisfy
- * the same interface without touching callers (see prisma/schema.prisma).
+ * demo; in the API it is hydrated from PostgreSQL at boot and every mutation is
+ * written through to it (see prisma/schema.prisma).
  */
 export class Collection<T extends Entity> {
   private readonly items = new Map<string, T>();
+  private sink?: MutationSink;
+  private name = 'unknown';
 
   constructor(seed: T[] = []) {
     for (const item of seed) this.items.set(item.id, item);
   }
 
+  /** Called once by the store; not part of the domain surface. */
+  bindSink(name: string, sink: MutationSink | undefined): void {
+    this.name = name;
+    this.sink = sink;
+  }
+
+  /** Loads records without emitting mutations — used when hydrating from the database. */
+  hydrate(records: T[]): void {
+    for (const record of records) this.items.set(record.id, record);
+  }
+
   insert(item: T): T {
     this.items.set(item.id, item);
+    this.sink?.record(this.name, 'insert', item.id, item);
     return item;
   }
 
@@ -69,6 +97,7 @@ export class Collection<T extends Entity> {
     if (!existing) throw new Error(`Record not found: ${id}`);
     const next = { ...existing, ...patch } as T;
     this.items.set(id, next);
+    this.sink?.record(this.name, 'update', id, next);
     return next;
   }
 
@@ -84,6 +113,7 @@ export class Collection<T extends Entity> {
 
   remove(id: string): void {
     this.items.delete(id);
+    this.sink?.record(this.name, 'remove', id);
   }
 
   all(): T[] {
@@ -143,4 +173,23 @@ export class BidStore {
   supportCases = new Collection<SupportCase>();
   apiKeys = new Collection<ApiKeyRecord>();
   webhooks = new Collection<WebhookEndpoint>();
+
+  /**
+   * Routes every mutation in every collection to `sink`, keyed by the property
+   * name — which is also the name the persistence layer maps to a table.
+   */
+  bindSink(sink: MutationSink | undefined): void {
+    for (const [name, value] of Object.entries(this)) {
+      if (value instanceof Collection) value.bindSink(name, sink);
+    }
+  }
+
+  /** Every collection, keyed by name — used by hydration and persistence. */
+  collections(): Record<string, Collection<Entity>> {
+    const out: Record<string, Collection<Entity>> = {};
+    for (const [name, value] of Object.entries(this)) {
+      if (value instanceof Collection) out[name] = value as Collection<Entity>;
+    }
+    return out;
+  }
 }

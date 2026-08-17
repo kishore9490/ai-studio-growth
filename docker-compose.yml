@@ -5,9 +5,9 @@
 #     api → http://localhost:4000
 #     db  → postgres://bid:bid@localhost:5432/bidtrust
 #
-# The API currently runs against in-memory repositories seeded with the demo
-# network; PostgreSQL is included because prisma/schema.prisma is the target
-# schema and migrations land next (see docs/ROADMAP.md).
+# The API persists to PostgreSQL. On a database with no data it writes the
+# fictional demo network once; every boot after that hydrates what is stored.
+# Set BID_PERSISTENCE=memory to run the API without a database at all.
 
 services:
   db:

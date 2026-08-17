@@ -10,16 +10,22 @@ async function main(): Promise<void> {
   await app.listen({ port: config.port, host: config.host });
   app.log.info(
     {
+      persistence: context.boot.persistence,
+      hydratedRecords: context.boot.hydratedRecords,
+      seeded: context.boot.seeded,
       organizations: context.platform.store.organizations.count(),
       verifications: context.platform.store.verificationRequests.count(),
     },
-    `BID Trust API listening on http://${config.host}:${config.port} — demo network seeded`,
+    `BID Trust API listening on http://${config.host}:${config.port}`,
   );
 
   for (const signal of ['SIGINT', 'SIGTERM'] as const) {
     process.on(signal, () => {
-      app.log.info(`${signal} received, shutting down`);
-      void app.close().then(() => process.exit(0));
+      app.log.info(`${signal} received, draining writes before shutdown`);
+      void app
+        .close()
+        .then(() => context.close())
+        .then(() => process.exit(0));
     });
   }
 }

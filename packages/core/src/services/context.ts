@@ -71,6 +71,17 @@ export class PlatformContext {
   }
 
   /**
+   * Continues an existing audit chain instead of starting a new one.
+   *
+   * Called after hydrating from a database: without it a restart would begin a
+   * second chain at GENESIS, and the break would be indistinguishable from a
+   * tampered log.
+   */
+  resumeAuditChain(hash: string): void {
+    this.lastAuditHash = hash;
+  }
+
+  /**
    * Appends a hash-chained audit entry. Each entry embeds the previous hash so
    * that removal or edit of any entry is detectable (evidence integrity,
    * Section 35). Demo build uses a fast non-cryptographic hash; production

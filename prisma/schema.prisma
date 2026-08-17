@@ -22,9 +22,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/* ------------------------------------------------------------------ */
-/* Enums                                                               */
-/* ------------------------------------------------------------------ */
+// ------------------------------------------------------------------
+// Enums
+// ------------------------------------------------------------------
 
 enum OrganizationLifecycle {
   DISCOVERED
@@ -277,9 +277,9 @@ enum Decision {
   PENDING
 }
 
-/* ------------------------------------------------------------------ */
-/* Identity                                                            */
-/* ------------------------------------------------------------------ */
+// ------------------------------------------------------------------
+// Identity
+// ------------------------------------------------------------------
 
 /// Sequence allocator per BID namespace (BUS, PER, CRD, REL, POL, VER, CMP).
 model BidIdSequence {
@@ -358,7 +358,9 @@ model Person {
   bidId       String   @unique
   fullName    String
   /// Personal contact details are stored encrypted and surfaced masked.
-  emailHash   String
+  /// The hash is set when a person is linked to a login identity; a person
+  /// discovered through a relationship has no login and therefore no hash.
+  emailHash   String?
   emailMasked String
   phoneMasked String
   city        String?
@@ -435,9 +437,9 @@ model WorkspaceMembership {
   @@map("workspace_memberships")
 }
 
-/* ------------------------------------------------------------------ */
-/* Relationships                                                       */
-/* ------------------------------------------------------------------ */
+// ------------------------------------------------------------------
+// Relationships
+// ------------------------------------------------------------------
 
 model Relationship {
   id                    String                @id @default(cuid())
@@ -538,9 +540,9 @@ model Authorization {
   @@map("authorizations")
 }
 
-/* ------------------------------------------------------------------ */
-/* Policy                                                              */
-/* ------------------------------------------------------------------ */
+// ------------------------------------------------------------------
+// Policy
+// ------------------------------------------------------------------
 
 model Policy {
   id               String           @id @default(cuid())
@@ -595,9 +597,9 @@ model PolicyVersion {
   @@map("policy_versions")
 }
 
-/* ------------------------------------------------------------------ */
-/* Verification                                                        */
-/* ------------------------------------------------------------------ */
+// ------------------------------------------------------------------
+// Verification
+// ------------------------------------------------------------------
 
 model VerificationRequest {
   id                      String                @id @default(cuid())
@@ -624,6 +626,11 @@ model VerificationRequest {
   completedAt             DateTime?
   expiresAt               DateTime?
   costPaise               Int                   @default(0)
+  /// Denormalised pointers to the two artefacts a completed verification
+  /// produces. Kept alongside the back-relations so a request can be read
+  /// without a join.
+  assessmentId            String?
+  credentialId            String?
   createdAt               DateTime              @default(now())
   updatedAt               DateTime              @updatedAt
 
@@ -664,6 +671,7 @@ model VerificationCheck {
   completedAt           DateTime?
   attempts              Int           @default(0)
   costPaise             Int           @default(0)
+  resultId              String?
 
   request VerificationRequest  @relation(fields: [verificationRequestId], references: [id], onDelete: Cascade)
   result  VerificationResult?
@@ -711,6 +719,7 @@ model VerificationResult {
   confidence            Float
   summary               String
   normalized            Json
+  evidenceId            String?
   createdAt             DateTime @default(now())
 
   request VerificationRequest @relation(fields: [verificationRequestId], references: [id], onDelete: Cascade)
@@ -831,9 +840,9 @@ model Consent {
   @@map("consents")
 }
 
-/* ------------------------------------------------------------------ */
-/* Campaigns & monitoring                                              */
-/* ------------------------------------------------------------------ */
+// ------------------------------------------------------------------
+// Campaigns & monitoring
+// ------------------------------------------------------------------
 
 model Campaign {
   id                      String           @id @default(cuid())
@@ -922,9 +931,9 @@ model MonitoringEvent {
   @@map("monitoring_events")
 }
 
-/* ------------------------------------------------------------------ */
-/* Providers                                                           */
-/* ------------------------------------------------------------------ */
+// ------------------------------------------------------------------
+// Providers
+// ------------------------------------------------------------------
 
 model Provider {
   id             String               @id
@@ -967,9 +976,9 @@ model ProviderTransaction {
   @@map("provider_transactions")
 }
 
-/* ------------------------------------------------------------------ */
-/* Commerce                                                            */
-/* ------------------------------------------------------------------ */
+// ------------------------------------------------------------------
+// Commerce
+// ------------------------------------------------------------------
 
 model Plan {
   id                   String   @id
@@ -1090,9 +1099,9 @@ model Payment {
   @@map("payments")
 }
 
-/* ------------------------------------------------------------------ */
-/* Customer success & platform                                         */
-/* ------------------------------------------------------------------ */
+// ------------------------------------------------------------------
+// Customer success & platform
+// ------------------------------------------------------------------
 
 model CustomerLifecycle {
   id             String                 @id @default(cuid())
@@ -1193,7 +1202,10 @@ model WebhookEndpoint {
   url          String
   events       String[]
   active       Boolean  @default(true)
-  secretHash   String
+  /// The signing secret is shown once at creation. Only its hash is stored,
+  /// plus a masked form so the endpoint stays identifiable in the UI.
+  secretHash   String?
+  secretMasked String
   createdAt    DateTime @default(now())
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)

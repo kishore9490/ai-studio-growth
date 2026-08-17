@@ -44,6 +44,25 @@ export async function buildServer(context: ApiContext): Promise<FastifyInstance>
     }
   });
 
+  // Durability barrier. A request does not get its response until the writes it
+  // caused have committed, so a 201 always means the row survives a restart.
+  app.addHook('onSend', async (request, reply, payload) => {
+    if (request.method === 'GET' || request.method === 'HEAD') return payload;
+    try {
+      await context.flush();
+    } catch (error) {
+      request.log.error({ err: error }, 'failed to persist mutations for this request');
+      reply.code(503);
+      return JSON.stringify({
+        error: {
+          code: 'PERSISTENCE_UNAVAILABLE',
+          message: 'The change could not be committed to durable storage and has not been applied.',
+        },
+      });
+    }
+    return payload;
+  });
+
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof HttpError) {
       reply.code(error.statusCode).send({ error: { code: error.code, message: error.message, details: error.details } });

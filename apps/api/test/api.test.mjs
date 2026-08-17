@@ -20,7 +20,12 @@ let app;
 let context;
 
 before(async () => {
-  context = await ApiContext.create(loadConfig({ ...process.env, REQUEST_LOGGING: 'false' }));
+  // Explicitly in-memory. Importing @prisma/client loads the repository's .env
+  // into process.env as a side effect, so a DATABASE_URL nobody passed would
+  // otherwise silently point these tests at the developer's real database.
+  context = await ApiContext.create(
+    loadConfig({ ...process.env, BID_PERSISTENCE: 'memory', REQUEST_LOGGING: 'false' }),
+  );
   app = await buildServer(context);
   await app.ready();
 });

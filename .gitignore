@@ -13,3 +13,6 @@ npm-debug.log*
 *.tsbuildinfo
 
 dist-static/
+
+# local scratch scripts
+.scratch/

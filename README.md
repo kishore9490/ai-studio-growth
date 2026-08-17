@@ -27,13 +27,17 @@ layer underneath it.
 | `packages/core` | The domain. Identity, relationships, policy engine, verification engine, provider abstraction, evidence, assessment, credentials, monitoring, billing, customer lifecycle, event bus, audit. No HTTP, no React, no database driver. |
 | `apps/web` | React + TypeScript + Vite + Tailwind + XYFlow application: product, public site, admin console, architecture explorer. |
 | `apps/api` | Fastify + TypeScript REST API over the same domain package, with API-key auth, tenant guards and rate limiting. |
-| `prisma/schema.prisma` | The PostgreSQL target schema for the same model. |
+| `prisma/schema.prisma` | The PostgreSQL schema the API persists to, plus the migrations that build it. |
 | `docs/` | Architecture, domain model, API, security, billing, verification model, provider integration, customer lifecycle, roadmap, assumptions, and 14 ADRs. |
 
 The web app runs the **real engine in the browser** against an in-memory store,
 so every workflow in the demo is a genuine state transition — invitations,
 provider routing, evidence, assessment, credential issuance, monitoring, billing
 and audit all actually happen.
+
+The API runs that same engine against **PostgreSQL**. Records created over HTTP
+survive a restart; a request is not answered until the writes it caused have
+committed. See [docs/LOCAL_DEVELOPMENT.md](docs/LOCAL_DEVELOPMENT.md).
 
 ---
 
@@ -48,13 +52,22 @@ npm run build:core
 # Web application → http://localhost:5173
 npm run dev
 
-# REST API → http://localhost:4000
-npm run dev:api
+# REST API → http://localhost:4000 (needs no database; see below to add one)
+BID_PERSISTENCE=memory npm run dev:api
 
 # Everything: typecheck, tests (25 across core and API), production builds
 npm run typecheck
 npm test
 npm run build
+```
+
+To run the API against PostgreSQL:
+
+```bash
+docker compose up -d db
+cp .env.example .env
+npm run db:migrate     # applies prisma/migrations
+npm run dev:api        # first boot writes the demo network, later boots load it
 ```
 
 Requires Node 20+ (developed on Node 22).

@@ -80,6 +80,13 @@ export class BidIdAllocator {
   snapshot(): Record<string, number> {
     return Object.fromEntries(this.counters.entries());
   }
+
+  restore(counters: Record<string, number>): void {
+    for (const [namespace, value] of Object.entries(counters)) {
+      const current = this.counters.get(namespace as BidNamespace) ?? 0;
+      if (value > current) this.counters.set(namespace as BidNamespace, value);
+    }
+  }
 }
 
 /** Deterministic, collision-resistant-enough surrogate key generator. */
@@ -92,6 +99,22 @@ export class SurrogateIdFactory {
     this.counter += 1;
     const suffix = this.counter.toString(36).padStart(4, '0');
     return `${prefix}${this.prefixSeparator}${suffix}`;
+  }
+
+  /**
+   * Resumes allocation past keys a previous process already handed out.
+   *
+   * The counter is checkpointed rather than inferred from existing ids: seeded
+   * records carry readable keys (`pol_standard`) whose suffixes are also valid
+   * base-36, so reading the data back would push the counter to an arbitrary
+   * value. A stored number has no such ambiguity.
+   */
+  restore(counter: number): void {
+    if (Number.isFinite(counter) && counter > this.counter) this.counter = Math.floor(counter);
+  }
+
+  snapshot(): number {
+    return this.counter;
   }
 }
 
