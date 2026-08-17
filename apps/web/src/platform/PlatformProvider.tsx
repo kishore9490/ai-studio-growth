@@ -45,6 +45,29 @@ interface PlatformValue {
 
 const PlatformContext = createContext<PlatformValue | null>(null);
 
+const SESSION_KEY = 'bid.session';
+
+function readRememberedSession(): SessionState | null {
+  try {
+    const raw = window.sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<SessionState>;
+    if (typeof parsed.organizationId !== 'string') return null;
+    return { mode: parsed.mode === 'PLATFORM_ADMIN' ? 'PLATFORM_ADMIN' : 'ORGANIZATION', organizationId: parsed.organizationId };
+  } catch {
+    return null;
+  }
+}
+
+function rememberSession(session: SessionState): void {
+  try {
+    window.sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  } catch {
+    // Storage can be unavailable (private mode, embedded contexts). The session
+    // simply falls back to the default organization.
+  }
+}
+
 export function PlatformProvider({ children }: { children: ReactNode }) {
   const [platform, setPlatform] = useState<BidPlatform | null>(null);
   const [version, setVersion] = useState(0);
@@ -57,7 +80,15 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       .then((handles) => {
         if (cancelled) return;
         setPlatform(handles.platform);
-        setSession({ mode: 'ORGANIZATION', organizationId: handles.organizations.abc });
+        // The demo store is in-memory, so a reload re-seeds it. The *viewpoint*
+        // (which organization you are acting as) is worth keeping across
+        // reloads — otherwise deep links always land you back in ABC.
+        const remembered = readRememberedSession();
+        const organizationId =
+          remembered && handles.platform.organizations.get(remembered.organizationId)
+            ? remembered.organizationId
+            : handles.organizations.abc;
+        setSession({ mode: remembered?.mode ?? 'ORGANIZATION', organizationId });
       })
       .catch((seedError: unknown) => {
         if (cancelled) return;
@@ -103,11 +134,19 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       isRequester: ['REQUESTER', 'CUSTOMER', 'ENTERPRISE'].includes(organization.commercialState),
       isCustomer: ['CUSTOMER', 'ENTERPRISE'].includes(organization.commercialState),
       switchOrganization: (organizationId: string) => {
-        setSession((current) => (current ? { ...current, organizationId } : current));
+        setSession((current) => {
+          const next = current ? { ...current, organizationId } : current;
+          if (next) rememberSession(next);
+          return next;
+        });
         refresh();
       },
       setMode: (mode: SessionMode) => {
-        setSession((current) => (current ? { ...current, mode } : current));
+        setSession((current) => {
+          const next = current ? { ...current, mode } : current;
+          if (next) rememberSession(next);
+          return next;
+        });
         refresh();
       },
       run: (action) => {

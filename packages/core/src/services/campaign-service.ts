@@ -128,12 +128,18 @@ export class CampaignService {
       if (!member.verificationRequestId) continue;
       const request = this.verifications.get(member.verificationRequestId);
       if (!request) continue;
-      const state: CampaignMember['state'] =
-        request.status === 'COMPLETED' || request.status === 'CREDENTIAL_ISSUED' || request.status === 'MONITORING'
-          ? 'COMPLETED'
-          : ['FAILED', 'REQUIRES_REVIEW', 'PARTIAL', 'EXPIRED', 'REVOKED'].includes(request.status)
-            ? 'EXCEPTION'
-            : 'IN_PROGRESS';
+      // Member state mirrors where the counterparty actually is, not merely
+      // "not finished": an organization that has not accepted yet is INVITED,
+      // not IN_PROGRESS.
+      const state: CampaignMember['state'] = ['COMPLETED', 'CREDENTIAL_ISSUED', 'MONITORING'].includes(request.status)
+        ? 'COMPLETED'
+        : ['FAILED', 'REQUIRES_REVIEW', 'PARTIAL', 'EXPIRED', 'REVOKED'].includes(request.status)
+          ? 'EXCEPTION'
+          : ['REQUESTED', 'INVITED'].includes(request.status)
+            ? 'INVITED'
+            : ['ACCEPTED', 'CONSENT_PENDING'].includes(request.status)
+              ? 'REGISTERED'
+              : 'IN_PROGRESS';
       if (state !== member.state) this.ctx.store.campaignMembers.update(member.id, { state });
     }
     this.recomputeStatus(campaignId);
