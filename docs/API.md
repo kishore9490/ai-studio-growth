@@ -9,19 +9,58 @@ entitlement or tenancy rule cannot be true in one and false in the other.
 
 ## Authentication
 
+Three credentials are accepted, in this order of precedence.
+
+### 1. A session, from signing in
+
+```bash
+curl -s -X POST localhost:4000/v1/auth/login \
+  -H 'content-type: application/json' \
+  -d '{"email":"priya.nair@abc-technologies.example","password":"bid-demo-password"}'
+```
+
+```json
+{ "data": { "token": "bid_sess_…", "expiresAt": "…", "user": {…}, "workspace": {…} } }
+```
+
+Send it as `Authorization: Bearer bid_sess_…`. The session acts as that person,
+with that person's workspace roles.
+
+Sessions expire after 12 hours and can be revoked before then — `POST
+/v1/auth/logout` ends the current one, `POST /v1/auth/logout-all` ends every
+session for the user, and `GET /v1/auth/sessions` lists them. The token itself
+is never stored: only a SHA-256 digest is, so a database read cannot recover a
+usable credential.
+
+Passwords are stored as PBKDF2-HMAC-SHA256 with a per-user salt. A wrong
+password and an unknown address produce byte-identical responses. Eight
+consecutive failures lock an account for fifteen minutes, and a locked account
+is still reported as `INVALID_CREDENTIALS` so the lockout does not confirm that
+the address exists.
+
+`POST /v1/auth/register` creates an organization, its workspace and an owner in
+one call, and returns a session. It claims an existing unclaimed organization
+rather than duplicating it — an organization is routinely in the network before
+anyone from it signs up. Registering makes you a **member**, not a customer:
+`canInitiateVerification` stays false until a requester plan is bought.
+
+### 2. A workspace API key
+
 ```
 x-bid-api-key: <key>
-# or
-Authorization: Bearer <key>
 ```
 
-Keys are workspace-scoped. In production the key is hashed at rest, shown once
-at creation, carries scopes and a per-key rate limit. This build additionally
-accepts a demo master key (`bid_demo_key`, override with `BID_DEMO_API_KEY`) and
-honours `x-bid-act-as: <BID-ID>` **for that key only**, so the examples below are
-runnable against the seeded demo network.
+Machine access: scoped to one workspace, with no user behind it. In production
+the key is hashed at rest, shown once at creation, carries scopes and a per-key
+rate limit.
 
-Public routes (`/v1/public/*`, `/health`) require no key.
+### 3. The demo master key
+
+`bid_demo_key` (override with `BID_DEMO_API_KEY`, or set it empty to disable).
+It is the only credential that honours `x-bid-act-as: <BID-ID>`, which is what
+makes the examples below runnable against the seeded demo network.
+
+Public routes (`/v1/public/*`, `/health`) require no credential at all.
 
 ### Errors
 
@@ -32,11 +71,15 @@ Public routes (`/v1/public/*`, `/health`) require no key.
 | Status | Code | Meaning |
 | --- | --- | --- |
 | 400 | `BAD_REQUEST` | Schema validation failed (`details` carries field errors) |
-| 401 | `UNAUTHORIZED` | Missing or unrecognized API key |
+| 401 | `UNAUTHORIZED` | Missing, expired, revoked or unrecognized credential |
+| 401 | `INVALID_CREDENTIALS` | Sign-in refused — identical for a wrong password, an unknown address and a locked account |
 | 403 | `FORBIDDEN` | Role (`reason: ROLE`) or plan (`reason: ENTITLEMENT`) does not permit it |
 | 404 | `NOT_FOUND` | Absent — or outside your tenant, which is reported identically |
+| 409 | `CONFLICT` | Collides with something that exists (an email already registered) |
 | 409 | `VERIFICATION_BLOCKED` | The verification is waiting on consent or documents; the body names what is outstanding |
+| 422 | `VALIDATION_FAILED` | The domain refused the value; `field` names the input |
 | 429 | `RATE_LIMITED` | Per-key window exhausted |
+| 503 | `PERSISTENCE_UNAVAILABLE` | The change could not be committed to durable storage and was not applied |
 
 Records belonging to another workspace return **404, not 403**: existence itself
 is not disclosed across tenants.
@@ -49,6 +92,7 @@ is not disclosed across tenants.
 
 | Area | Routes |
 | --- | --- |
+| Auth | `POST /v1/auth/register` · `POST /v1/auth/login` · `POST /v1/auth/logout` · `POST /v1/auth/logout-all` · `GET /v1/auth/me` · `GET /v1/auth/sessions` · `DELETE /v1/auth/sessions/{id}` |
 | Organizations | `POST /v1/organizations` · `GET /v1/organizations` · `GET /v1/organizations/{bidId}` · `PATCH /v1/organizations/{bidId}` |
 | Invitations | `POST /v1/invitations` · `GET /v1/invitations` · `GET /v1/invitations/{id}` · `POST /v1/invitations/{id}/accept` |
 | Relationships | `POST /v1/relationships` · `GET /v1/relationships` · `GET /v1/relationships/{id}` · `PATCH /v1/relationships/{id}` |

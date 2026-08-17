@@ -12,6 +12,7 @@ export const COLLECTION_TO_MODEL: Record<string, string> = {
   organizationIdentifiers: 'OrganizationIdentifier',
   persons: 'Person',
   users: 'User',
+  sessions: 'UserSession',
   workspaces: 'Workspace',
   memberships: 'WorkspaceMembership',
   relationships: 'Relationship',

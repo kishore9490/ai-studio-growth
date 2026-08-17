@@ -1,6 +1,7 @@
 import { DEFAULT_PLANS } from './billing/pricing.js';
 import type { Industry, PlatformRole, RelationshipType, WorkspaceRole } from './domain/enums.js';
 import type { Notification, Organization, Plan, User } from './domain/types.js';
+import { ConflictError } from './domain/errors.js';
 import { InMemoryEventBus, type DomainEvent, type EventBus } from './events/events.js';
 import { createDefaultProviders, providerRecords, type ScriptedOutcomes } from './providers/mock-providers.js';
 import { ProviderRegistry } from './providers/provider.js';
@@ -15,6 +16,7 @@ import { OrganizationService } from './services/organization-service.js';
 import { PolicyService } from './services/policy-service.js';
 import { RelationshipService } from './services/relationship-service.js';
 import { SearchService } from './services/search-service.js';
+import { IdentityService, assertPasswordAcceptable, type AuthenticatedSession } from './services/identity-service.js';
 import { VerificationService } from './services/verification-service.js';
 import type { AccessContext } from './security/access.js';
 import { SystemClock, type Clock } from './util/clock.js';
@@ -78,6 +80,7 @@ export class BidPlatform {
   readonly billing: BillingService;
   readonly lifecycle: CustomerLifecycleService;
   readonly search: SearchService;
+  readonly identity: IdentityService;
 
   private readonly changeListeners = new Set<() => void>();
 
@@ -115,6 +118,7 @@ export class BidPlatform {
     this.billing = new BillingService(this.context);
     this.lifecycle = new CustomerLifecycleService(this.context, this.billing);
     this.search = new SearchService(this.context);
+    this.identity = new IdentityService(this.context);
 
     this.wireEventConsumers();
   }
@@ -226,12 +230,18 @@ export class BidPlatform {
     this.bus.subscribe('SubscriptionCreated', (event) => {
       const payload = event.payload as { organizationId: string; planId: string };
       const plan = this.billing.plan(payload.planId);
+
+      // Free membership is not a purchase. Member ≠ customer is the rule the
+      // whole commercial model rests on, and holding a zero-price plan must not
+      // quietly promote an organization past it.
+      if (!plan || plan.monthlyPricePaise <= 0) return;
+
       this.organizations.setCommercialState(
         payload.organizationId,
-        plan?.tier === 'ENTERPRISE' ? 'ENTERPRISE' : 'CUSTOMER',
+        plan.tier === 'ENTERPRISE' ? 'ENTERPRISE' : 'CUSTOMER',
         'subscription activated',
       );
-      this.lifecycle.transition(payload.organizationId, 'PAID_CUSTOMER', `subscribed to ${plan?.name ?? 'plan'}`);
+      this.lifecycle.transition(payload.organizationId, 'PAID_CUSTOMER', `subscribed to ${plan.name}`);
     });
 
     this.bus.subscribe('MonitoringEnabled', (event) => {
@@ -448,6 +458,87 @@ export class BidPlatform {
   }
 
   /* ---------------- high-level journeys ---------------- */
+
+  /**
+   * Sign-up: an organization joins BID and gets its first user.
+   *
+   * The organization may already exist in the network — someone else's
+   * invitation or relationship can have introduced it long before it registered
+   * — so an unclaimed match is claimed rather than duplicated. Claiming makes it
+   * a MEMBER; only buying a plan makes it a customer, which is why nothing here
+   * touches its commercial state beyond that.
+   */
+  async registerAccount(input: {
+    legalName: string;
+    displayName?: string;
+    industry?: Industry;
+    country?: string;
+    city?: string;
+    website?: string;
+    name: string;
+    email: string;
+    password: string;
+    userAgent?: string;
+    ipAddress?: string;
+  }): Promise<AuthenticatedSession & { organization: Organization }> {
+    // Fail on a duplicate account before creating an organization, so a retried
+    // sign-up does not leave an orphan organization behind each time.
+    if (this.identity.byEmail(input.email)) {
+      throw new ConflictError('An account already exists for this email address.', 'User');
+    }
+    assertPasswordAcceptable(input.password);
+
+    const existing = this.organizations.findUnclaimedByName(input.legalName);
+    const organization =
+      existing ??
+      this.organizations.create({
+        legalName: input.legalName,
+        displayName: input.displayName,
+        industry: input.industry ?? 'GENERIC',
+        country: input.country,
+        city: input.city,
+        website: input.website,
+      });
+
+    const workspace =
+      this.organizations.workspaceFor(organization.id) ??
+      this.organizations.claim({
+        organizationId: organization.id,
+        workspaceName: input.displayName ?? input.legalName,
+        // Initiating verification is a paid capability; a new workspace starts
+        // able to respond to requests, not to make them.
+        requesterEnabled: false,
+      });
+
+    const user = await this.identity.createUser({ name: input.name, email: input.email, password: input.password });
+    this.identity.addMembership(workspace.id, user.id, ['OWNER']);
+
+    const freePlan = this.billing.planByTier('MEMBER_FREE');
+    if (freePlan && !this.billing.subscriptionFor(workspace.id)) {
+      this.billing.subscribe({ workspaceId: workspace.id, organizationId: organization.id, planId: freePlan.id, seats: 1 });
+    }
+
+    this.context.audit({
+      actorType: 'USER',
+      actorId: user.id,
+      actorName: user.name,
+      action: 'account.registered',
+      resourceType: 'organization',
+      resourceId: organization.id,
+      workspaceId: workspace.id,
+      organizationId: organization.id,
+      summary: `${organization.displayName} registered on BID Trust${existing ? ' and claimed its existing network identity' : ''}.`,
+    });
+
+    const session = await this.identity.login({
+      email: input.email,
+      password: input.password,
+      userAgent: input.userAgent,
+      ipAddress: input.ipAddress,
+    });
+
+    return { ...session, organization: this.organizations.require(organization.id) };
+  }
 
   /**
    * Requester invites a counterparty and opens the verification in one step —

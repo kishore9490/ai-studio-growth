@@ -30,6 +30,7 @@ import type {
   SupportCase,
   UsageRecord,
   User,
+  UserSession,
   VerificationCheck,
   VerificationDocument,
   VerificationRequest,
@@ -139,6 +140,7 @@ export class BidStore {
   organizationIdentifiers = new Collection<OrganizationIdentifier>();
   persons = new Collection<Person>();
   users = new Collection<User>();
+  sessions = new Collection<UserSession>();
   workspaces = new Collection<Workspace>();
   memberships = new Collection<WorkspaceMembership>();
   relationships = new Collection<Relationship>();

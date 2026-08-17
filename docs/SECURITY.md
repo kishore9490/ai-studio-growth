@@ -11,11 +11,17 @@ The governing rule:
 
 | Control | Today | Production |
 | --- | --- | --- |
-| User authentication | Demo session bound to a seeded user | Email + password with MFA, or OIDC/OAuth SSO |
+| User authentication | Email + password. PBKDF2-HMAC-SHA256, 210 000 iterations, per-user salt, parameters stored with the hash so they can be raised and upgraded on next login | Add MFA and OIDC/OAuth SSO |
+| Credential stuffing | Eight consecutive failures lock the account for 15 minutes; the lockout is reported as an ordinary wrong password | Per-IP and per-account rate shaping at the edge, breached-password screening |
+| Account enumeration | An unknown address and a wrong password produce byte-identical responses, and both do the same hashing work. Suspension is only reported after a correct password | Unchanged |
 | MFA | Modelled on the user record | Enforced per workspace policy |
 | SSO | OIDC-ready boundary | Enterprise plans; SCIM provisioning |
 | API authentication | `x-bid-api-key` / bearer, prefix lookup | Hashed secrets, shown once, rotation and IP allowlists |
-| Session management | In-memory | Short-lived tokens, refresh rotation, revocation on role change |
+| Session management | Opaque 256-bit tokens stored as SHA-256 digests, 12-hour expiry, revocable individually or in bulk; changing a password revokes every session | Add refresh rotation and revocation on role change |
+
+The session token is never written down — only its digest — so read access to
+the database does not yield a usable credential. Password hashes and token
+digests are excluded from every API projection.
 
 Provider credentials are never stored in tenant data. The provider record holds a
 `secretRef` resolved from a secrets manager at call time.

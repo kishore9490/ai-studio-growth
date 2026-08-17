@@ -379,7 +379,15 @@ model User {
   id            String    @id @default(cuid())
   name          String
   email         String    @unique
-  passwordHash  String?
+  /// Encoded hash and its parameters — never a password. Null means this
+  /// account cannot log in yet, which every caller must treat as a refusal
+  /// rather than as "no check required".
+  passwordHash      String?
+  passwordUpdatedAt DateTime?
+  status            UserStatus @default(ACTIVE)
+  /// Consecutive failures, reset on success. Drives the temporary lockout.
+  failedLoginCount  Int        @default(0)
+  lockedUntil       DateTime?
   personId      String?
   platformRoles String[]
   mfaEnabled    Boolean   @default(false)
@@ -388,8 +396,36 @@ model User {
 
   person      Person?               @relation(fields: [personId], references: [id])
   memberships WorkspaceMembership[]
+  sessions    UserSession[]
 
   @@map("users")
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+/// An interactive login. Stored so it can be revoked; the bearer token itself
+/// is never stored, only its SHA-256 digest.
+model UserSession {
+  id             String    @id @default(cuid())
+  userId         String
+  workspaceId    String
+  organizationId String
+  tokenHash      String    @unique
+  issuedAt       DateTime  @default(now())
+  expiresAt      DateTime
+  lastSeenAt     DateTime  @default(now())
+  revokedAt      DateTime?
+  userAgent      String?
+  ipAddress      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("user_sessions")
 }
 
 /// The tenant boundary. An organization identity is global; a workspace is private.

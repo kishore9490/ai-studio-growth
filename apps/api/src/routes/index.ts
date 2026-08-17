@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import type { ApiContext } from '../context.js';
+import { registerAuthRoutes } from './auth.js';
 import { registerOrganizationRoutes } from './organizations.js';
 import { registerRelationshipRoutes } from './relationships.js';
 import { registerPolicyRoutes } from './policies.js';
@@ -13,8 +14,17 @@ export const API_INDEX = {
   service: 'BID Trust API',
   version: 'v1',
   documentation: 'docs/API.md',
-  authentication: 'Send x-bid-api-key (or Authorization: Bearer <key>). Keys are workspace-scoped.',
+  authentication:
+    'Sign in at POST /v1/auth/login and send the session token as Authorization: Bearer <token>, ' +
+    'or send a workspace API key as x-bid-api-key.',
   resources: [
+    'POST   /v1/auth/register',
+    'POST   /v1/auth/login',
+    'POST   /v1/auth/logout',
+    'POST   /v1/auth/logout-all',
+    'GET    /v1/auth/me',
+    'GET    /v1/auth/sessions',
+    'DELETE /v1/auth/sessions/{id}',
     'POST   /v1/organizations',
     'GET    /v1/organizations',
     'GET    /v1/organizations/{bidId}',
@@ -75,6 +85,7 @@ export async function registerRoutes(app: FastifyInstance, context: ApiContext):
     uptimeSeconds: Math.round(process.uptime()),
   }));
 
+  await registerAuthRoutes(app, context);
   await registerPublicRoutes(app, context);
   await registerOrganizationRoutes(app, context);
   await registerRelationshipRoutes(app, context);

@@ -1,6 +1,7 @@
 import { BidPlatform } from '../platform.js';
 import { POLICY_TEMPLATES, getPolicyTemplate } from '../policy/policy-templates.js';
 import { scriptKey, type ScriptedOutcomes } from '../providers/mock-providers.js';
+import { hashPassword } from '../security/passwords.js';
 import { addDays } from '../util/clock.js';
 import { DemoClock } from './demo-clock.js';
 
@@ -12,6 +13,15 @@ import { DemoClock } from './demo-clock.js';
  * one in-flight verification, one exception that needs human review, one
  * counterparty that has not accepted yet.
  */
+
+/**
+ * Password shared by every seeded account.
+ *
+ * Deliberately obvious and deliberately exported: this network is fictional,
+ * and a demo nobody can sign into is not a demo. Nothing outside the seed sets
+ * it, so a real deployment never has an account with this password.
+ */
+export const DEMO_PASSWORD = 'bid-demo-password';
 
 export const DEMO_BID_IDS = {
   ABC: 'BID-BUS-00104',
@@ -584,6 +594,20 @@ export async function seedDemo(now: string = NOW): Promise<DemoHandles> {
 
   lifecycle.recomputeAll();
   verifications.refreshFreshness();
+
+  // Demo credentials. Every seeded account shares one obvious password so the
+  // running application can actually be signed into; it is only ever applied to
+  // this fictional network, and DEMO_PASSWORD is exported so the sign-in screen
+  // can show it rather than expecting anyone to guess.
+  for (const user of store.users.all()) {
+    store.users.update(user.id, {
+      passwordHash: await hashPassword(DEMO_PASSWORD),
+      passwordUpdatedAt: now,
+      status: 'ACTIVE',
+      failedLoginCount: 0,
+    });
+  }
+
   clock.set(now);
 
   return {

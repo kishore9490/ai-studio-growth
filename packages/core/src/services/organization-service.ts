@@ -100,6 +100,20 @@ export class OrganizationService {
     );
   }
 
+  /**
+   * An organization with this name that nobody has claimed yet.
+   *
+   * Sign-up uses this: an organization is routinely in the network — invited or
+   * merely referenced by a counterparty — before anyone from it registers, and
+   * that identity should be claimed rather than duplicated. A claimed match is
+   * deliberately not returned; joining someone else's existing workspace is an
+   * invitation flow, not a sign-up.
+   */
+  findUnclaimedByName(name: string): Organization | undefined {
+    const match = this.byName(name);
+    return match && !match.primaryWorkspaceId ? match : undefined;
+  }
+
   identifiers(organizationId: string): OrganizationIdentifier[] {
     return this.ctx.store.organizationIdentifiers.find((i) => i.organizationId === organizationId);
   }

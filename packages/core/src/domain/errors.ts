@@ -24,3 +24,38 @@ export class VerificationBlockedError extends Error {
 export function isVerificationBlockedError(error: unknown): error is VerificationBlockedError {
   return error instanceof VerificationBlockedError;
 }
+
+/** Input the domain refuses, with a message written for the person who typed it. */
+export class ValidationError extends Error {
+  readonly code = 'VALIDATION_FAILED';
+
+  constructor(
+    message: string,
+    /** The input this is about, so a form can put the message next to the field. */
+    readonly field?: string,
+  ) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
+export function isValidationError(error: unknown): error is ValidationError {
+  return error instanceof ValidationError;
+}
+
+/** The request is well-formed but collides with something that already exists. */
+export class ConflictError extends Error {
+  readonly code = 'CONFLICT';
+
+  constructor(
+    message: string,
+    readonly resourceType: string,
+  ) {
+    super(message);
+    this.name = 'ConflictError';
+  }
+}
+
+export function isConflictError(error: unknown): error is ConflictError {
+  return error instanceof ConflictError;
+}

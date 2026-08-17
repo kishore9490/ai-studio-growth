@@ -24,6 +24,7 @@ export * from './verification/assessment.js';
 export * from './events/events.js';
 export * from './store/store.js';
 export * from './security/access.js';
+export * from './security/passwords.js';
 
 export * from './billing/pricing.js';
 
@@ -37,6 +38,7 @@ export * from './services/monitoring-service.js';
 export * from './services/billing-service.js';
 export * from './services/lifecycle-service.js';
 export * from './services/search-service.js';
+export * from './services/identity-service.js';
 
 export * from './platform.js';
 export * from './seed/demo-clock.js';

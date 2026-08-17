@@ -92,36 +92,13 @@ export const notFound = (resource: string) => new HttpError(404, 'NOT_FOUND', `$
 export const badRequest = (message: string, details?: unknown) => new HttpError(400, 'BAD_REQUEST', message, details);
 
 /**
- * Resolves the caller's access context.
+ * The caller for this request.
  *
- * Production: the API key identifies a workspace, its scopes and its rate
- * limits. This build keeps that shape but accepts a demo master key so the
- * documented examples are runnable. `x-bid-act-as` is honoured only for the
- * demo key and is explicitly a demo affordance.
+ * Credentials are resolved once, in a hook, because session lookup hashes the
+ * token and is therefore asynchronous — routes stay synchronous and simply read
+ * the result. A route that calls this is declaring that it requires a caller.
  */
-export function resolveAccess(context: ApiContext, request: FastifyRequest): AccessContext {
-  const headerKey = (request.headers['x-bid-api-key'] ?? '') as string;
-  const bearer = (request.headers.authorization ?? '') as string;
-  const apiKey = headerKey || (bearer.startsWith('Bearer ') ? bearer.slice(7) : '');
-  if (!apiKey) throw unauthorized();
-
-  const { platform, config } = context;
-
-  const stored = platform.store.apiKeys.all().find((key) => apiKey.startsWith(key.prefix) && !key.revokedAt);
-  const actAs = (request.headers['x-bid-act-as'] ?? '') as string;
-
-  let organizationId: string | undefined;
-  if (stored) {
-    const workspace = platform.store.workspaces.get(stored.workspaceId);
-    organizationId = workspace?.organizationId;
-    platform.store.apiKeys.update(stored.id, { lastUsedAt: new Date().toISOString() });
-  } else if (apiKey === config.demoApiKey) {
-    const target = actAs ? platform.organizations.byBidId(actAs) : undefined;
-    organizationId = target?.id ?? platform.organizations.byBidId('BID-BUS-00104')?.id;
-  }
-
-  if (!organizationId) throw unauthorized('API key is not recognized in this environment');
-
-  const access = platform.accessContextFor(organizationId, { roles: ['API_CLIENT'] });
-  return { ...access, viaApiKey: true, scopes: stored?.scopes ?? ['*'] };
+export function resolveAccess(_context: ApiContext, request: FastifyRequest): AccessContext {
+  if (!request.identity) throw unauthorized('Sign in or send a valid API key.');
+  return request.identity.access;
 }

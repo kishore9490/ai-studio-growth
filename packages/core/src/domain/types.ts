@@ -105,6 +105,34 @@ export interface User {
   mfaEnabled: boolean;
   lastLoginAt?: string;
   createdAt: string;
+  /**
+   * Encoded hash and its parameters — never a password. Absent for a user
+   * created by an administrator who has not set one yet, which is why every
+   * caller must treat "no hash" as "cannot log in" rather than "no check".
+   */
+  passwordHash?: string;
+  passwordUpdatedAt?: string;
+  status?: 'ACTIVE' | 'SUSPENDED';
+  failedLoginCount?: number;
+  lockedUntil?: string;
+}
+
+/**
+ * An interactive login. Sessions are stored so they can be revoked; the token
+ * itself is never stored, only its digest.
+ */
+export interface UserSession {
+  id: string;
+  userId: string;
+  workspaceId: string;
+  organizationId: string;
+  tokenHash: string;
+  issuedAt: string;
+  expiresAt: string;
+  lastSeenAt: string;
+  revokedAt?: string;
+  userAgent?: string;
+  ipAddress?: string;
 }
 
 /**
