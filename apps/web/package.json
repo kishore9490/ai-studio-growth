@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "build:static": "VITE_ROUTER=hash vite build --outDir dist-static --base ./ --sourcemap false && node scripts/inline.mjs"
   },
   "dependencies": {
     "@bid/core": "*",

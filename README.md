@@ -59,6 +59,17 @@ npm run build
 
 Requires Node 20+ (developed on Node 22).
 
+### One-file build (no server needed)
+
+```bash
+npm run build:static --workspace @bid/web
+# → apps/web/dist-static/bid-trust-standalone.html
+```
+
+Produces a single self-contained HTML file — CSS and JS inlined, hash routing,
+zero external requests — that runs the whole product from any origin or straight
+off disk. Useful for sharing a runnable demo without deploying anything.
+
 ### Docker
 
 ```bash
