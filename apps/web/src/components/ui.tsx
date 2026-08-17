@@ -366,6 +366,16 @@ export function Modal({
   footer?: ReactNode;
   width?: string;
 }) {
+  // Escape must close a modal. Without it the overlay stays mounted and quietly
+  // swallows every subsequent click on the page.
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    if (open) window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [open, onClose]);
+
   return (
     <AnimatePresence>
       {open && (

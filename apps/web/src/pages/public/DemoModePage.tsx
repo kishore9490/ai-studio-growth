@@ -90,7 +90,7 @@ export function DemoModePage() {
           </div>
 
           <div className="mt-5 grid gap-5 lg:grid-cols-3">
-            <div className="lg:col-span-2">
+            <div className="min-w-0 lg:col-span-2">
               <p className="bid-label">Required checks</p>
               <div className="mt-2 overflow-x-auto">
                 <table className="bid-table">
@@ -130,7 +130,7 @@ export function DemoModePage() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="min-w-0 space-y-4">
               <div>
                 <p className="bid-label">Policy rules</p>
                 <DataList

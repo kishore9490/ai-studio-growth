@@ -351,17 +351,17 @@ export function BidDigitalCard({ card, compact }: { card: DigitalCardModel; comp
       )}
     >
       <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-brand-600/20 blur-2xl" />
-      <div className="relative flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
+      <div className="relative flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <OrgAvatar name={card.displayName} color={card.logoColor} text={card.logoText} size={compact ? 'md' : 'lg'} />
-          <div>
-            <p className={cx('font-semibold tracking-tight', compact ? 'text-sm' : 'text-lg')}>{card.displayName}</p>
-            <p className="font-mono text-xs text-navy-200">{card.bidId}</p>
+          <div className="min-w-0">
+            <p className={cx('truncate font-semibold tracking-tight', compact ? 'text-sm' : 'text-lg')}>{card.displayName}</p>
+            <p className="truncate font-mono text-xs text-navy-200">{card.bidId}</p>
           </div>
         </div>
         <span
           className={cx(
-            'flex items-center gap-1 rounded px-2 py-1 text-2xs font-bold uppercase tracking-wider',
+            'flex shrink-0 items-center gap-1 whitespace-nowrap rounded px-2 py-1 text-2xs font-bold uppercase tracking-wider',
             verified ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/10 text-navy-100',
           )}
         >
@@ -372,7 +372,7 @@ export function BidDigitalCard({ card, compact }: { card: DigitalCardModel; comp
 
       <ul className={cx('relative grid gap-1.5', compact ? 'mt-3 grid-cols-2' : 'mt-5 grid-cols-2')}>
         {card.attributes.map((attribute) => (
-          <li key={attribute.label} className="flex items-center gap-1.5 text-xs text-navy-100">
+          <li key={attribute.label} className="flex min-w-0 items-center gap-1.5 text-xs text-navy-100">
             <span
               className={cx(
                 'flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold',
@@ -385,13 +385,13 @@ export function BidDigitalCard({ card, compact }: { card: DigitalCardModel; comp
             >
               {attribute.state === 'VERIFIED' ? '✓' : attribute.state === 'ATTENTION' ? '!' : '–'}
             </span>
-            {attribute.label}
+            <span className="truncate">{attribute.label}</span>
           </li>
         ))}
       </ul>
 
-      <div className="relative mt-5 flex items-end justify-between gap-4">
-        <div className="text-2xs text-navy-300">
+      <div className="relative mt-5 flex items-end justify-between gap-3">
+        <div className="min-w-0 text-2xs text-navy-300">
           {card.issuedAt && <p>Issued {formatDate(card.issuedAt)}</p>}
           {card.expiresAt && <p>Valid to {formatDate(card.expiresAt)}</p>}
           <p className="mt-1 max-w-[15rem] leading-snug">{card.footnote}</p>

@@ -46,7 +46,7 @@ export function StoryModePage() {
       <div className="mx-auto max-w-6xl space-y-5 px-4 py-8 sm:px-6">
         <Card>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant="primary"
                 icon={playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}

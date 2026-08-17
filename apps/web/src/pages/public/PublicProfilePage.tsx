@@ -82,7 +82,7 @@ export function PublicProfilePage() {
       </div>
 
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
           <Card>
             <SectionHeading
               title="BID-verified information"
@@ -172,7 +172,7 @@ export function PublicProfilePage() {
           </Callout>
         </div>
 
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5">
           <BidDigitalCard card={card} />
 
           <Card>

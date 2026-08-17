@@ -10,7 +10,13 @@ if (!container) throw new Error('Root element #root not found');
 
 createRoot(container).render(
   <StrictMode>
-    <BrowserRouter>
+    {/*
+      Opt in to the v7 behaviours now. `v7_relativeSplatPath` matters here
+      because the product lives under a splat route (`/app/*`) with relative
+      children; adopting it early keeps routing identical across the upgrade
+      instead of inheriting a silent breakage.
+    */}
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <PlatformProvider>
         <App />
       </PlatformProvider>
