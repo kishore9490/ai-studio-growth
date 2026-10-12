@@ -241,7 +241,7 @@ export function EnquiryForm({ intent, defaultService }: { intent: Intent; defaul
   const aria = (k: keyof Values) => ({ 'aria-invalid': !!errors[k], 'aria-describedby': errors[k] ? errId(k) : undefined })
   const Label = ({ k, children, optional }: { k: keyof Values; children: ReactNode; optional?: boolean }) => (
     <label htmlFor={`${uid}-${k}`} className="text-sm font-medium text-tech/85">
-      {children} {optional ? <span className="text-tech/40">(optional)</span> : <span className="text-signal" aria-hidden="true">*</span>}
+      {children} {optional ? <span className="text-tech/60">(optional)</span> : <span className="text-signal" aria-hidden="true">*</span>}
     </label>
   )
 

@@ -150,7 +150,7 @@ export function HomePage() {
             {amcYear.map((q, i) => (
               <li key={q.m} data-reveal className="relative bg-graphite p-7 pt-10">
                 <span className="absolute left-0 top-0 h-0.5 bg-signal" style={{ width: `${(i + 1) * 25}%` }} aria-hidden="true" />
-                <p className="display text-5xl text-tech/15">{q.m}</p>
+                <p className="display text-5xl text-tech/40" aria-hidden="true">{q.m}</p>
                 <h3 className="mt-6 font-display text-lg font-semibold">{q.t}</h3>
                 <p className="mt-3 text-sm leading-relaxed text-tech/60">{q.d}</p>
               </li>

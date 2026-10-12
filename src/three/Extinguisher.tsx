@@ -27,7 +27,7 @@ export const ANCHORS: Record<PartId, THREE.Vector3Tuple> = {
 export const ANCHOR_NORMALS: Record<PartId, THREE.Vector3Tuple> = {
   gauge: [0, 0, 1],
   pin: [0, 0, 1],
-  lever: [-0.6, 0.8, 0],
+  lever: [-0.45, 0.45, 0.75],
   hose: [0.9, 0, 0.4],
   body: [0, 0, 1],
   valve: [0.6, 0.2, 0.6],

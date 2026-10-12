@@ -21,6 +21,7 @@ export function Hero() {
   const bus = useMemo(createHeroBus, [])
   const [mode, setMode] = useState<Mode>('pending')
   const [ready, setReady] = useState(false)
+  const noScene = mode === 'fallback'
   const [active, setActive] = useState(true)
   const [quality, setQuality] = useState<'high' | 'low'>('low')
   const capture = useMemo(captureMode, [])
@@ -90,11 +91,13 @@ export function Hero() {
           // ——— Headline entrance (DOM): lines rise from a mask; copy and CTAs follow ———
           if (!reduce && !capture) {
             gsap.from('[data-line]', { yPercent: 108, duration: 1.1, ease: 'expo.out', stagger: 0.09, delay: 0.25 })
-            gsap.from('[data-rise]', { y: 18, autoAlpha: 0, duration: 0.9, ease: 'power3.out', stagger: 0.08, delay: 0.75 })
+            // opacity never starts at 0: hidden text is not an LCP candidate, which would tie LCP to the animation
+            gsap.from('[data-rise]', { y: 18, opacity: 0.25, duration: 0.9, ease: 'power3.out', stagger: 0.08, delay: 0.5 })
             gsap.from('[data-chrome]', { autoAlpha: 0, duration: 1.2, ease: 'power2.out', delay: 1.4 })
           }
 
-          if (reduce || capture || shot) return
+          // No live scene (fallback still): the hero stays a static, unpinned section.
+          if (reduce || capture || shot || noScene) return
 
           // ——— Shots B → C → D: one scrubbed master timeline, pinned for a limited distance ———
           const tl = gsap.timeline({
@@ -127,7 +130,7 @@ export function Hero() {
       )
       return () => mm.revert()
     },
-    { scope: root },
+    { scope: root, dependencies: [noScene], revertOnUpdate: true },
   )
 
   // Shot A → B dolly, started once the scene has rendered its first frames.
@@ -290,9 +293,9 @@ export function Hero() {
         </div>
       )}
 
-      {/* ——— Scroll progress rail (desktop) ——— */}
-      {!capture && (
-        <div data-chrome className="pointer-events-none absolute right-6 top-1/2 hidden -translate-y-1/2 items-stretch gap-4 xl:flex" aria-hidden="true">
+      {/* ——— Scroll progress rail (desktop, live scene only) ——— */}
+      {!capture && !noScene && (
+        <div data-chrome className="pointer-events-none absolute right-6 top-1/2 hidden -translate-y-1/2 items-stretch gap-4 motion-reduce:!hidden xl:flex" aria-hidden="true">
           <div className="relative w-px bg-tech/15">
             <div data-rail-fill className="absolute inset-0 origin-top scale-y-0 bg-signal" />
           </div>

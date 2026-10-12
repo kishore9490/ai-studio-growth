@@ -8,9 +8,21 @@ const dist = join(root, 'dist')
 const template = readFileSync(join(dist, 'index.html'), 'utf8')
 const { render, routes, siteUrl } = await import(pathToFileURL(join(root, 'dist-ssr', 'entry-server.js')).href)
 
+// Preload the two above-the-fold font files (display + body, latin subset) so text does not re-paint late.
+import { readdirSync } from 'fs'
+const assets = readdirSync(join(dist, 'assets'))
+const fontPreloads = [/^archivo-latin-wdth-normal-.*\.woff2$/, /^inter-latin-wght-normal-.*\.woff2$/]
+  .map((re) => assets.find((f) => re.test(f)))
+  .filter(Boolean)
+  .map((f) => `<link rel="preload" as="font" type="font/woff2" href="/assets/${f}" crossorigin />`)
+  .join('\n    ')
+
 const page = (url) => {
   const { html, head } = render(url)
-  return template.replace('<!--head-->', head).replace('<!--app-->', html)
+  return template
+    .replace('<!--head-->', `${fontPreloads}\n    ${head}`)
+    .replace('<div id="root">', `<div id="root" data-route="${url}">`)
+    .replace('<!--app-->', html)
 }
 
 for (const url of routes) {

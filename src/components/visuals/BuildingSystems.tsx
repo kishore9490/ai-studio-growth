@@ -67,7 +67,7 @@ export function BuildingSystems() {
       </div>
 
       <figure className="relative">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Building systems diagram (scrolls horizontally on small screens)">
           <svg viewBox="0 0 1000 620" className="min-w-[640px] text-tech" role="img" aria-labelledby="bs-title bs-desc">
             <title id="bs-title">Illustrative fire protection layout of a three-storey commercial building</title>
             <desc id="bs-desc">

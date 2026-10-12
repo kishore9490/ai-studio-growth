@@ -4,12 +4,12 @@ import { Meta } from '../seo'
 
 export function PrivacyPage() {
   return (
-    <section className="bg-paper pb-24 pt-32 text-ink lg:pt-40">
+    <section className="bg-graphite pb-24 pt-32 lg:pt-40">
       <Meta title="Privacy" path="/privacy" description={`How ${site.name} handles the personal information you share through this website.`} />
       <div className="container-x max-w-3xl">
-        <p className="eyebrow !text-ink/60">Privacy</p>
+        <p className="eyebrow">Privacy</p>
         <h1 className="display-tight mt-6 text-[clamp(2.2rem,5vw,3.75rem)] uppercase">How we handle your information</h1>
-        <div className="mt-10 space-y-6 leading-relaxed text-ink/75 [&_h2]:mt-10 [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-ink">
+        <div className="mt-10 space-y-6 leading-relaxed text-tech/75 [&_h2]:mt-10 [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-tech">
           <p>This website collects personal information only when you choose to send an enquiry or booking request.</p>
           <h2>What we collect</h2>
           <p>

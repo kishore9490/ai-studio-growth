@@ -14,9 +14,12 @@ const app = (
   </StrictMode>
 )
 
-// Prerendered pages hydrate. Query-string variants (e.g. /contact?intent=quote) render differently from the
-// prerendered HTML, so they are client-rendered to avoid hydration mismatches.
-if (container.firstElementChild && !location.search) hydrateRoot(container, app)
+// Prerendered pages hydrate — but only when the markup was rendered for this exact route. Hosts that fall back
+// to another page's HTML, and query-string variants (e.g. /contact?intent=quote) that render differently,
+// are client-rendered instead to avoid hydration mismatches.
+const norm = (p: string) => p.replace(/\/+$/, '') || '/'
+const prerenderedFor = container.dataset.route
+if (container.firstElementChild && prerenderedFor && norm(prerenderedFor) === norm(location.pathname) && !location.search) hydrateRoot(container, app)
 else {
   container.textContent = ''
   createRoot(container).render(app)

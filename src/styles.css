@@ -125,15 +125,16 @@
   .btn:active {
     transform: translateY(1px);
   }
+  /* Fill is a shade deeper than signal red so white label text meets WCAG AA (≈4.9:1). */
   .btn-primary {
-    background: var(--color-signal);
+    background: #d0281c;
     color: #fff;
     box-shadow:
       0 0 0 1px rgb(255 255 255 / 0.06) inset,
       0 10px 30px -12px rgb(240 68 56 / 0.7);
   }
   .btn-primary:hover {
-    background: #ff5446;
+    background: #b91f14;
   }
   .btn-ghost {
     border: 1px solid rgb(245 246 247 / 0.22);
