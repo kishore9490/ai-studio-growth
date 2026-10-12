@@ -38,7 +38,8 @@ function Rig({ bus, product, lights, lightLevel }: {
     composePose(bus, target)
     if (!current.current) current.current = { ...target }
     const c = current.current
-    const d = Math.min(dt, 0.1)
+    // generous clamp: low-fps devices still converge in a frame or two instead of trailing the scroll
+    const d = Math.min(dt, 0.35)
     for (const k of POSE_KEYS) {
       c[k] = bus.reducedMotion ? target[k] : THREE.MathUtils.damp(c[k], target[k], 6.5, d)
     }

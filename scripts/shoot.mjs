@@ -14,7 +14,7 @@ const logs = []
 page.on('console', (m) => { if (['error', 'warning'].includes(m.type())) logs.push(`[${m.type()}] ${m.text()}`) })
 page.on('pageerror', (e) => logs.push(`[pageerror] ${e.message}`))
 await page.goto(url, { waitUntil: 'load' })
-await page.waitForFunction(() => window.__heroReady === true, null, { timeout: 60000 }).catch(() => logs.push('hero not ready'))
+await page.waitForFunction(() => window.__heroReady === true, null, { timeout: 60000, polling: 500 }).catch(() => logs.push('hero not ready'))
 await page.waitForTimeout(wait)
 console.log('fps-ish', await page.evaluate(() => new Promise(r => { let n = 0; const t0 = performance.now(); const f = () => { n++; if (performance.now() - t0 < 2000) requestAnimationFrame(f); else r(n / 2) }; requestAnimationFrame(f) })))
 let i = 0

@@ -29,7 +29,7 @@ for (const j of jobs.filter((x) => !only || only.includes(x.name))) {
   {
     const page = await browser.newPage({ viewport: { width: j.vw, height: j.vh }, deviceScaleFactor: 1 })
     await page.goto(`${base}/?capture&quality=high&shot=${j.shot}${j.q || ''}`, { waitUntil: 'load' })
-    await page.waitForFunction(() => window.__heroReady === true, null, { timeout: 180000 })
+    await page.waitForFunction(() => window.__heroReady === true, null, { timeout: 180000, polling: 500 })
     await page.waitForTimeout(6000) // contact shadows / reflector settle
     for (const o of j.outs) {
       const url = await page.evaluate(

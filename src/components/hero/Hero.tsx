@@ -23,8 +23,8 @@ export function Hero() {
   const [ready, setReady] = useState(false)
   const [active, setActive] = useState(true)
   const [quality, setQuality] = useState<'high' | 'low'>('low')
-  const startIntro = useRef<() => void>(() => {})
   const capture = useMemo(captureMode, [])
+  if (import.meta.env.DEV && typeof window !== 'undefined') (window as Window & { __heroBus?: unknown }).__heroBus = bus
 
   // Decide between the live scene and the pre-rendered fallback.
   useEffect(() => {
@@ -36,17 +36,30 @@ export function Hero() {
     return onIdle(() => setMode('3d'), 600)
   }, [])
 
-  // Pause rendering entirely when the hero is off-screen.
+  // Pause rendering entirely when the hero is off-screen. (A geometry check rather than an
+  // IntersectionObserver: GSAP's pin re-parents the section, which can leave an observer stale.)
   useEffect(() => {
-    if (!root.current || !('IntersectionObserver' in window)) return
-    const io = new IntersectionObserver(([e]) => setActive(e.isIntersecting), { rootMargin: '100px' })
-    io.observe(root.current!)
-    return () => io.disconnect()
+    let raf = 0
+    const check = () => {
+      raf = 0
+      const r = root.current?.getBoundingClientRect()
+      if (r) setActive(r.bottom > -100 && r.top < window.innerHeight + 100)
+    }
+    const queue = () => {
+      if (!raf) raf = requestAnimationFrame(check)
+    }
+    check()
+    window.addEventListener('scroll', queue, { passive: true })
+    window.addEventListener('resize', queue)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('scroll', queue)
+      window.removeEventListener('resize', queue)
+    }
   }, [])
 
   bus.onReady = () => {
     setReady(true)
-    startIntro.current()
     ;(window as Window & { __heroReady?: boolean }).__heroReady = true
   }
 
@@ -68,17 +81,10 @@ export function Hero() {
           bus.reducedMotion = reduce || !!shot
           Object.assign(bus.scroll, poses.B)
 
-          // ——— Shot A → B: time-based camera intro (starts once the scene has rendered) ———
-          const introTween = gsap.to(bus.intro, { p: 1, duration: 2.6, ease: 'power3.inOut', paused: true })
-          if (reduce || shot === 'B' || shot === 'C' || shot === 'D') {
-            bus.intro.p = 1
-          } else if (shot === 'A') {
-            bus.intro.p = 0
-          } else {
-            bus.intro.p = 0
-            startIntro.current = () => introTween.play()
-            if (bus.ready) introTween.play()
-          }
+          // ——— Shot A → B: the camera intro itself is played from the `ready` effect below ———
+          if (reduce || shot === 'B' || shot === 'C' || shot === 'D') bus.intro.p = 1
+          else if (shot === 'A') bus.intro.p = 0
+          else if (!bus.ready) bus.intro.p = 0
           if (shot === 'C' || shot === 'D') Object.assign(bus.scroll, poses[shot])
 
           // ——— Headline entrance (DOM): lines rise from a mask; copy and CTAs follow ———
@@ -117,16 +123,22 @@ export function Hero() {
             tl.fromTo(sel, { opacity: 0.35 }, { opacity: 1, duration: 0.15, ease: 'none' }, [0, 0.62, 2.2][i])
             if (i < 2) tl.to(sel, { opacity: 0.35, duration: 0.15, ease: 'none' }, [0.6, 2.18][i])
           })
-
-          return () => {
-            introTween.kill()
-          }
         },
       )
       return () => mm.revert()
     },
     { scope: root },
   )
+
+  // Shot A → B dolly, started once the scene has rendered its first frames.
+  useEffect(() => {
+    if (!ready || bus.intro.p >= 1) return
+    const tween = gsap.to(bus.intro, { p: 1, duration: 2.6, ease: 'power3.inOut' })
+    return () => {
+      tween.kill()
+      bus.intro.p = 1 // never leave the camera stranded mid-dolly
+    }
+  }, [ready, bus])
 
   // Fonts and lazy content change layout height; keep trigger positions accurate.
   useEffect(() => {
@@ -180,28 +192,37 @@ export function Hero() {
             <div
               key={a.id}
               data-annot
-              className="annot invisible opacity-0 [--len:44px] lg:[--len:118px]"
+              className="annot invisible opacity-0 [--len:46px] lg:[--len:112px]"
               ref={(el) => {
                 bus.annotationEls[a.id] = el
               }}
             >
               <div className="annot-dot -translate-x-1/2 -translate-y-1/2" />
-              <div
-                className="absolute left-0 top-0 h-px origin-left bg-tech/60"
-                style={{ width: 'var(--len)', transform: `rotate(${Math.atan2(a.dy, a.dx)}rad)` }}
-              />
-              <div
-                className="absolute w-max max-w-[8.5rem] lg:max-w-[15rem]"
-                style={{
-                  left: `calc(var(--len) * ${(a.dx * Math.SQRT1_2).toFixed(3)} *  1)`,
-                  top: `calc(var(--len) * ${(a.dy * Math.SQRT1_2).toFixed(3)})`,
-                  transform: `translate(${a.dx < 0 ? '-100%' : '0'}, ${a.dy < 0 ? '-100%' : '0'}) translate(${a.dx < 0 ? '-8px' : '8px'}, ${a.dy < 0 ? '-4px' : '4px'})`,
-                  textAlign: a.dx < 0 ? 'right' : 'left',
-                }}
-              >
-                <p className="font-display text-[0.8rem] font-semibold uppercase leading-tight tracking-wide text-tech lg:text-sm">{a.title}</p>
-                <p className="meta mt-1 hidden text-muted lg:block">{a.note}</p>
-              </div>
+              {(['narrow', 'wide'] as const).map((layout) => {
+                const [dx, dy] = a[layout]
+                const k = dx && dy ? Math.SQRT1_2 : 1
+                const hx = dx < 0 ? '-100%' : dx > 0 ? '0' : '-12px'
+                return (
+                  <div key={layout} className={layout === 'wide' ? 'max-lg:hidden' : 'lg:hidden'}>
+                    <div
+                      className="absolute left-0 top-0 h-px origin-left bg-tech/60"
+                      style={{ width: 'var(--len)', transform: `rotate(${Math.atan2(dy, dx)}rad)` }}
+                    />
+                    <div
+                      className="absolute w-max max-w-[8.5rem] [text-shadow:0_1px_10px_rgba(0,0,0,0.9)] lg:max-w-[15rem]"
+                      style={{
+                        left: `calc(var(--len) * ${(dx * k).toFixed(3)})`,
+                        top: `calc(var(--len) * ${(dy * k).toFixed(3)})`,
+                        transform: `translate(${hx}, ${dy < 0 ? '-100%' : dy > 0 ? '0' : '-50%'}) translate(${dx < 0 ? '-8px' : '8px'}, ${dy < 0 ? '-4px' : dy > 0 ? '4px' : '0'})`,
+                        textAlign: dx < 0 ? 'right' : 'left',
+                      }}
+                    >
+                      <p className="font-display text-[0.8rem] font-semibold uppercase leading-tight tracking-wide text-tech lg:text-sm">{a.title}</p>
+                      <p className="meta mt-1 hidden text-tech/65 lg:block">{a.note}</p>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           ))}
         </div>
@@ -246,19 +267,19 @@ export function Hero() {
           </div>
 
           {/* Stage 2 — detail shot caption */}
-          <div data-stage="detail" className="invisible absolute inset-x-0 top-24 opacity-0 lg:top-auto lg:bottom-[14vh]" aria-hidden="true">
+          <div data-stage="detail" className="invisible absolute inset-x-0 top-24 opacity-0 lg:top-[17vh]" aria-hidden="true">
             <div className="container-x">
               <p className="eyebrow mb-3 text-lime">02 — Detail</p>
-              <p className="display-tight max-w-[22rem] text-[clamp(1.6rem,6vw,2.1rem)] uppercase lg:max-w-[30rem] lg:text-[clamp(2rem,3vw,3rem)]">
+              <p className="display-tight max-w-[22rem] text-[clamp(1.6rem,6vw,2.1rem)] uppercase lg:max-w-[26rem] lg:text-[clamp(1.9rem,2.6vw,2.7rem)]">
                 {heroCopy.detailTitle}
               </p>
-              <p className="mt-3 hidden max-w-[26rem] text-tech/70 lg:block">{heroCopy.detailBody}</p>
+              <p className="mt-3 hidden max-w-[24rem] text-sm text-tech/65 lg:block">{heroCopy.detailBody}</p>
             </div>
           </div>
 
           {/* Stage 3 — full reveal hand-off */}
-          <div data-stage="reveal" className="invisible absolute inset-x-0 bottom-10 opacity-0 lg:bottom-auto lg:top-1/2 lg:-translate-y-1/2" aria-hidden="true">
-            <div className="container-x flex justify-start lg:justify-end">
+          <div data-stage="reveal" className="invisible absolute inset-x-0 bottom-28 opacity-0 lg:bottom-auto lg:top-1/2 lg:-translate-y-1/2" aria-hidden="true">
+            <div className="container-x flex justify-start lg:justify-end xl:pr-44">
               <div className="max-w-[30rem] lg:text-right">
                 <p className="eyebrow mb-3 text-lime">03 — Ready</p>
                 <p className="display-tight text-[clamp(1.8rem,7vw,2.4rem)] uppercase lg:text-[clamp(2.2rem,3.6vw,3.6rem)]">{heroCopy.revealTitle}</p>

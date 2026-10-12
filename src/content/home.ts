@@ -7,7 +7,7 @@ export const heroCopy = {
   primaryCta: 'Book a Service',
   secondaryCta: 'Explore Our Solutions',
   tertiaryCta: 'Request a Quote',
-  detailTitle: 'Every fitting inspected. Nothing assumed.',
+  detailTitle: 'Every fitting. Inspected.',
   detailBody:
     'Gauge, seal, valve, hose and shell — the components that decide whether an extinguisher works when it is needed.',
   revealTitle: 'Ready when it matters.',

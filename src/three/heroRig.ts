@@ -54,11 +54,12 @@ export const NARROW: PoseSet = {
   D: p({ px: -1.3, py: 0.7, pz: 2.3, tx: 0.03, ty: 0.38, tz: -0.4, fov: 48, sy: -0.04, rot: -0.75, rim: 1.4, key: 0.85, room: 1.1 }),
 }
 
-export const HERO_ANNOTATIONS: { id: PartId; title: string; note: string; dx: number; dy: number }[] = [
-  { id: 'gauge', title: 'Pressure gauge', note: 'Read at every inspection', dx: 1, dy: 1 },
-  { id: 'pin', title: 'Safety pin & tamper seal', note: 'Shows the unit has not been operated', dx: -1, dy: 1 },
-  { id: 'lever', title: 'Operating lever', note: 'Squeeze-grip discharge control', dx: -1, dy: -1 },
-  { id: 'valve', title: 'Valve head & hose outlet', note: 'Checked for corrosion and blockage', dx: 1, dy: -1 },
+/** Leader-line directions (dx, dy ∈ {-1, 0, 1}) per layout, chosen so labels never cross the caption or each other. */
+export const HERO_ANNOTATIONS: { id: PartId; title: string; note: string; wide: [number, number]; narrow: [number, number] }[] = [
+  { id: 'lever', title: 'Operating lever', note: 'Squeeze-grip discharge control', wide: [-1, 1], narrow: [0, -1] },
+  { id: 'pin', title: 'Safety pin & tamper seal', note: 'Shows the unit has not been operated', wide: [-1, 1], narrow: [-1, 1] },
+  { id: 'gauge', title: 'Pressure gauge', note: 'Read at every inspection', wide: [1, 1], narrow: [1, 1] },
+  { id: 'valve', title: 'Valve head & hose outlet', note: 'Checked for corrosion and blockage', wide: [1, -1], narrow: [1, -1] },
 ]
 
 export type HeroBus = {
