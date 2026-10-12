@@ -1,0 +1,274 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Colour system */
+  --color-graphite: #0b0e12;
+  --color-graphite-2: #151a21;
+  --color-graphite-3: #1d232c;
+  --color-metal: #343b44;
+  --color-signal: #f04438;
+  --color-signal-deep: #a81720;
+  --color-lime: #c7f36b;
+  --color-tech: #f5f6f7;
+  --color-muted: #a6afba;
+  --color-paper: #eef0f2;
+  --color-ink: #11151a;
+
+  /* Typography */
+  --font-display: 'Archivo Variable', 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --ease-cine: cubic-bezier(0.22, 1, 0.36, 1);
+  --breakpoint-xs: 25rem;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-graphite text-tech font-sans antialiased;
+    overflow-x: clip;
+  }
+  ::selection {
+    background: var(--color-signal);
+    color: #fff;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-lime);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@layer components {
+  /* Expanded, heavy industrial display face (Archivo width axis). */
+  .display {
+    font-family: var(--font-display);
+    font-variation-settings: 'wdth' 118;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 0.92;
+    text-transform: uppercase;
+  }
+  .display-tight {
+    font-family: var(--font-display);
+    font-variation-settings: 'wdth' 108;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.02;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .container-x {
+    width: 100%;
+    max-width: 92rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 640px) {
+    .container-x {
+      padding-inline: 2rem;
+    }
+  }
+  @media (min-width: 1280px) {
+    .container-x {
+      padding-inline: 3.5rem;
+    }
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    min-height: 3rem;
+    padding: 0 1.4rem;
+    font-family: var(--font-display);
+    font-variation-settings: 'wdth' 110;
+    font-weight: 650;
+    font-size: 0.86rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: 2px;
+    transition:
+      background-color 0.25s var(--ease-cine),
+      color 0.25s var(--ease-cine),
+      border-color 0.25s var(--ease-cine),
+      transform 0.25s var(--ease-cine);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:active {
+    transform: translateY(1px);
+  }
+  .btn-primary {
+    background: var(--color-signal);
+    color: #fff;
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.06) inset,
+      0 10px 30px -12px rgb(240 68 56 / 0.7);
+  }
+  .btn-primary:hover {
+    background: #ff5446;
+  }
+  .btn-ghost {
+    border: 1px solid rgb(245 246 247 / 0.22);
+    color: var(--color-tech);
+    background: rgb(11 14 18 / 0.35);
+    backdrop-filter: blur(6px);
+  }
+  .btn-ghost:hover {
+    border-color: rgb(245 246 247 / 0.6);
+    background: rgb(245 246 247 / 0.06);
+  }
+  .btn-dark {
+    background: var(--color-ink);
+    color: var(--color-tech);
+  }
+  .btn-dark:hover {
+    background: #000;
+  }
+  .link-arrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-display);
+    font-variation-settings: 'wdth' 110;
+    font-weight: 650;
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .link-arrow svg {
+    transition: transform 0.3s var(--ease-cine);
+  }
+  .link-arrow:hover svg {
+    transform: translateX(4px);
+  }
+
+  .hairline {
+    border-color: rgb(245 246 247 / 0.1);
+  }
+  .grid-bg {
+    background-image:
+      linear-gradient(rgb(245 246 247 / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(245 246 247 / 0.04) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .grid-bg-light {
+    background-image:
+      linear-gradient(rgb(17 21 26 / 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(17 21 26 / 0.06) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+}
+
+/* Hero annotation leader lines and hotspots */
+.annot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.annot-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--color-tech);
+  box-shadow:
+    0 0 0 4px rgb(245 246 247 / 0.14),
+    0 0 18px rgb(240 68 56 / 0.6);
+}
+
+.hotspot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  will-change: transform;
+  -webkit-tap-highlight-color: transparent;
+}
+.hotspot span {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: rgb(245 246 247 / 0.95);
+  box-shadow: 0 0 0 5px rgb(245 246 247 / 0.16);
+  transition:
+    transform 0.3s var(--ease-cine),
+    background-color 0.3s;
+}
+.hotspot::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 999px;
+  border: 1px solid rgb(245 246 247 / 0.5);
+  animation: hotspot-pulse 2.4s var(--ease-cine) infinite;
+}
+.hotspot[aria-pressed='true'] span {
+  background: var(--color-signal);
+  transform: scale(1.15);
+}
+.hotspot:hover span {
+  transform: scale(1.2);
+}
+@keyframes hotspot-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
