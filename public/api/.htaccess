@@ -1,0 +1,4 @@
+# Never serve the config file directly
+<Files "enquiry-config.php">
+  Require all denied
+</Files>

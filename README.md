@@ -55,6 +55,34 @@ Behaviour:
 - `vite preview` does **not** do this — it falls back to the home page HTML. The app detects that and client-renders the correct page (no errors), but measure performance with a real static server, e.g. `npx serve dist`.
 - Long-cache `/assets/*` (hashed filenames).
 
+## Deploying to Hostinger (Web / Premium / Business hosting)
+
+The build includes everything Hostinger's Apache + PHP hosting needs: `.htaccess` (clean URLs, 404, HTTPS, gzip, caching) and `api/enquiry.php`, a PHP mail handler for the enquiry form, so no third-party form service is needed.
+
+1. Set your domain in `.env.hostinger` (`VITE_SITE_URL=https://www.yourdomain.in`).
+2. Build the upload package (Windows PowerShell):
+   ```powershell
+   npm.cmd install; npm.cmd run build:hostinger
+   ```
+   This creates `firetech-hostinger.zip`.
+3. hPanel → **Websites → File Manager** → open `public_html` → delete the default `default.php`/`index.php` → **Upload** the zip → right-click → **Extract** into `public_html` (files must sit directly in `public_html`, not in a subfolder).
+4. hPanel → **Emails**: create a mailbox on your domain (e.g. `noreply@yourdomain.in`).
+5. In File Manager, create `public_html/api/enquiry-config.php`:
+   ```php
+   <?php return [
+     'to'   => 'you@yourdomain.in',      // where enquiries should arrive
+     'from' => 'noreply@yourdomain.in',  // mailbox from step 4
+     'site' => 'FireTech',
+   ];
+   ```
+   This file is not part of the build, so re-uploading the site never overwrites it. Direct web access to it is blocked.
+6. hPanel → **Security → SSL**: make sure SSL is active (`.htaccess` redirects all traffic to HTTPS).
+7. Submit a test enquiry on the live site and confirm it arrives (check spam the first time).
+
+**To update the site later:** rebuild, upload the new zip, and extract it over the old files.
+
+Tested in this environment: the `.htaccess` rules on Apache 2.4 (clean URLs, trailing-slash 301, 404, HTTPS redirect, asset caching, gzip, config file blocked), and `enquiry.php` on PHP 8.3 (valid submission → formatted email with reference and Reply-To; rejects invalid input, GET, foreign origins, more than 5 posts per IP per 10 minutes, and the unconfigured state). **Not tested:** real delivery through Hostinger's mail server — that needs step 7.
+
 ## The 3D hero
 
 | File | Role |
