@@ -9,8 +9,8 @@ export function DemoBanner() {
       <div className="mx-auto flex max-w-[1240px] items-center justify-center gap-2 px-4 py-1.5 text-center">
         <FlaskConical className="size-3.5 shrink-0" aria-hidden />
         <span>
-          <strong className="font-medium">Demo environment.</strong> Sample data, mock payments and test-mode commissions — no
-          real money moves.{" "}
+          <strong className="font-medium">Demo environment.</strong>
+          <span className="max-sm:hidden"> Sample data, mock payments and test-mode commissions —</span> no real money moves.{" "}
           <Link href="/help#demo" className="underline underline-offset-2 hover:text-ink">
             Learn more
           </Link>

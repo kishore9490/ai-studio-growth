@@ -97,7 +97,7 @@ export default async function HomePage() {
             }
           />
           {lead && (
-            <div className="mt-12 grid gap-6 lg:grid-cols-[1.15fr_1fr]">
+            <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-[1.15fr_1fr]">
               <Link
                 href={`/marketplace/${lead.slug}`}
                 className="group overflow-hidden rounded-[22px] border border-line bg-canvas transition-shadow hover:shadow-lift"
@@ -157,7 +157,7 @@ export default async function HomePage() {
 
       {/* ─── Membership preview ──────────────────────────────────────── */}
       <section className="mx-auto max-w-[1240px] px-4 pb-24 sm:px-6">
-        <div className="grid overflow-hidden rounded-[24px] border border-line bg-surface lg:grid-cols-[1fr_1.1fr]">
+        <div className="grid grid-cols-1 overflow-hidden rounded-[24px] border border-line bg-surface lg:grid-cols-[1fr_1.1fr]">
           <div className="flex flex-col justify-between gap-8 p-8 sm:p-10">
             <div>
               <p className="eyebrow">Membership</p>

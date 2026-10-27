@@ -79,7 +79,8 @@ export async function signUp(_: FormState, formData: FormData): Promise<FormStat
   const cookieStore = await cookies();
   const cookieCode = cookieStore.get(REF_COOKIE)?.value ?? null;
   const code = referralCode ?? cookieCode;
-  const source = referralCode ? "CODE" : "LINK";
+  // A code pre-filled from a referral link still counts as link attribution.
+  const source = referralCode && normaliseReferralCode(referralCode) !== normaliseReferralCode(cookieCode) ? "CODE" : "LINK";
   const passwordHash = await hashPassword(password);
 
   let referralNote: string | undefined;

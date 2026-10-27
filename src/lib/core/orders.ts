@@ -31,7 +31,7 @@ async function nextOrderNumber(tx: Tx) {
   const year = new Date().getUTCFullYear();
   const count = await tx.order.count();
   // Random suffix keeps numbers unique without a sequence table; the column is unique anyway.
-  return `LOS-${year}-${String(count + 1).padStart(5, "0")}${Math.random().toString(36).slice(2, 4).toUpperCase()}`;
+  return `LOS-${year}-${String(count + 1).padStart(5, "0")}-${Math.random().toString(36).slice(2, 4).toUpperCase()}`;
 }
 
 export async function createOrder(

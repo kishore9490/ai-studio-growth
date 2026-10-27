@@ -82,7 +82,7 @@ export function CommandPalette({ scope = "app" }: { scope?: "app" | "admin" }) {
           className="flex h-9 w-full max-w-[420px] items-center gap-2 rounded-[10px] border border-line bg-surface px-3 text-[13.5px] text-ink-3 shadow-soft transition-colors hover:border-line-strong"
         >
           <Search className="size-4" />
-          <span className="flex-1 truncate text-left">Search tools, products, resources…</span>
+          <span className="flex-1 truncate text-left">{scope === "admin" ? "Search members, orders, admin pages…" : "Search tools, products, resources…"}</span>
           <span className="hidden items-center gap-0.5 sm:flex">
             <Kbd>⌘</Kbd>
             <Kbd>K</Kbd>
@@ -114,7 +114,7 @@ export function CommandPalette({ scope = "app" }: { scope?: "app" | "admin" }) {
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search LifeOS…"
+              placeholder={scope === "admin" ? "Search members by name or email, orders by number…" : "Search LifeOS…"}
               className="h-14 flex-1 bg-transparent text-[15px] outline-none placeholder:text-ink-3"
               role="combobox"
               aria-expanded

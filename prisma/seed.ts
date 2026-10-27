@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 // Development seed. Wipes and recreates all data. Never run against production.
 //
 //   npm run db:seed
@@ -35,7 +34,7 @@ async function main() {
   console.log("→ Resetting database");
   await wipe();
 
-  await db.platformSettings.create({ data: { id: 1, taxRateBps: 1800, taxLabel: "GST 18% (placeholder rate)", supportEmail: "support@lifeos.example" } });
+  await db.platformSettings.create({ data: { id: 1, taxRateBps: 1800, taxLabel: "GST (placeholder rate)", supportEmail: "support@lifeos.example" } });
   await db.affiliateSettings.create({
     data: { id: 1, programEnabled: true, commissionMode: "TEST", attributionWindowDays: 30, holdPeriodDays: 14, minPayoutInPaise: 25000 },
   });

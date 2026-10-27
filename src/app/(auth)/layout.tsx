@@ -6,7 +6,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       <DemoBanner />
-      <div className="grid min-h-[calc(100dvh-30px)] lg:grid-cols-[1fr_minmax(0,560px)]">
+      <div className="grid grid-cols-1 min-h-[calc(100dvh-30px)] lg:grid-cols-[1fr_minmax(0,560px)]">
         <main id="main" className="flex flex-col px-4 py-6 sm:px-10">
           <Logo />
           <div className="flex flex-1 items-center justify-center py-12">

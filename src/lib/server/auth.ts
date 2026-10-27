@@ -3,6 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect, notFound } from "next/navigation";
+import { connection } from "next/server";
 import { db } from "@/lib/core/db";
 
 // Data Access Layer for authentication. Every page, server action and route
@@ -52,6 +53,8 @@ export async function destroySession() {
 
 /** Resolve the signed-in user for this request (memoised per request). */
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
+  // Session validity depends on the current time, so this is always request-time work.
+  await connection();
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
   const session = await db.session.findUnique({

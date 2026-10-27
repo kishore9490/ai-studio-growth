@@ -3,19 +3,30 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { buttonClasses } from "@/components/ui/button";
 
 type Item = { href: string; label: string };
 
 export function NavLinks({ items }: { items: Item[] }) {
-  const pathname = usePathname();
+  return (
+    <Suspense fallback={<NavLinksView items={items} pathname={null} />}>
+      <ActiveNavLinks items={items} />
+    </Suspense>
+  );
+}
+
+function ActiveNavLinks({ items }: { items: Item[] }) {
+  return <NavLinksView items={items} pathname={usePathname()} />;
+}
+
+function NavLinksView({ items, pathname }: { items: Item[]; pathname: string | null }) {
   return (
     <nav aria-label="Main" className="hidden lg:block">
       <ul className="flex items-center gap-0.5">
         {items.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const active = pathname !== null && (pathname === item.href || pathname.startsWith(`${item.href}/`));
           return (
             <li key={item.href}>
               <Link
@@ -37,8 +48,19 @@ export function NavLinks({ items }: { items: Item[] }) {
 }
 
 export function MobileNav({ items }: { items: Item[] }) {
+  return (
+    <Suspense fallback={<MobileNavView items={items} pathname={null} />}>
+      <ActiveMobileNav items={items} />
+    </Suspense>
+  );
+}
+
+function ActiveMobileNav({ items }: { items: Item[] }) {
+  return <MobileNavView items={items} pathname={usePathname()} />;
+}
+
+function MobileNavView({ items, pathname }: { items: Item[]; pathname: string | null }) {
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
   // Close the sheet whenever the route changes. Tracking the previous path in
   // state (rather than an effect) avoids a cascading render.
   const [lastPath, setLastPath] = useState(pathname);

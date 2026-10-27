@@ -44,7 +44,7 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-line bg-canvas">
       <div className="mx-auto max-w-[1240px] px-4 pb-10 pt-16 sm:px-6">
-        <div className="grid gap-12 md:grid-cols-[1.4fr_repeat(4,1fr)]">
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-[1.4fr_repeat(4,1fr)]">
           <div className="max-w-xs">
             <Logo />
             <p className="mt-4 text-sm leading-relaxed text-ink-2">

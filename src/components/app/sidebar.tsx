@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { Suspense, useEffect, useState, useSyncExternalStore } from "react";
 import {
   Banknote,
   BarChart3,
@@ -83,8 +83,23 @@ function writeCollapsed(v: boolean) {
   listeners.forEach((l) => l());
 }
 
-function NavList({ nav, collapsed, onNavigate }: { nav: Nav; collapsed?: boolean; onNavigate?: () => void }) {
-  const pathname = usePathname();
+type NavListProps = { nav: Nav; collapsed?: boolean; onNavigate?: () => void };
+
+// usePathname() is request data, so the active-state list renders inside a
+// Suspense boundary; the fallback is the same list without highlighting.
+function NavList(props: NavListProps) {
+  return (
+    <Suspense fallback={<NavListView {...props} pathname={null} />}>
+      <ActiveNavList {...props} />
+    </Suspense>
+  );
+}
+
+function ActiveNavList(props: NavListProps) {
+  return <NavListView {...props} pathname={usePathname()} />;
+}
+
+function NavListView({ nav, collapsed, onNavigate, pathname }: NavListProps & { pathname: string | null }) {
   return (
     <nav aria-label="Application" className="flex flex-col gap-5">
       {nav.map((group, gi) => (
@@ -94,7 +109,7 @@ function NavList({ nav, collapsed, onNavigate }: { nav: Nav; collapsed?: boolean
           <ul className="flex flex-col gap-0.5">
             {group.items.map((item) => {
               const Icon = ICONS[item.icon] ?? LayoutDashboard;
-              const active = isActive(pathname, item);
+              const active = pathname !== null && isActive(pathname, item);
               return (
                 <li key={item.href}>
                   <Link
