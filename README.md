@@ -4,6 +4,16 @@ A letterhead generator for **Expert Medical Coding Academy**. You fill in your a
 
 Everything runs in the browser. There is no account, no server and no paid service. Your details and logo are saved in your own browser, so they are still there after a refresh.
 
+## Quick start (no installation)
+
+1. Download **`EMCA-Letterhead-Studio.html`** from this repository (open the file on GitHub, then click **Download raw file**).
+2. Double-click it. It opens in your browser (Chrome, Edge, Firefox or Safari).
+3. Fill in your details, upload your logo, and use **Download PDF**, **Word**, **Blank Letterhead** or **Print**.
+
+It works offline. Nothing is installed and nothing is sent anywhere. Your details are saved in that browser, so keep opening the same file in the same browser to find them again.
+
+> Downloads go to your browser's usual Downloads folder. When printing, choose **A4** and **100% / Actual size**.
+
 ## What it does
 
 - **Academy details:** name (the only required field), tagline, address, city, state, PIN, phone, WhatsApp, email (validated), website, registration number.
@@ -30,6 +40,8 @@ npm run dev        # open the address it prints, e.g. http://localhost:5173
 ```
 
 ### Build for hosting
+
+To update `EMCA-Letterhead-Studio.html` after changing the code, run `npm run build:single` and copy `dist-single/index.html` over it.
 
 ```bash
 npm run build          # static site in dist/ (upload to any web host)
