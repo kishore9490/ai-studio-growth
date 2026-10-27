@@ -1,0 +1,648 @@
+// LifeOS Digital — data model
+//
+// Conventions
+// - Money is always stored as integer minor units (paise) in `...InPaise` columns.
+// - Rates are stored in basis points (1 bp = 0.01%), e.g. 1500 = 15%.
+// - `isSampleData` marks rows created by the seed script so they can be labelled
+//   in the UI and removed before launch.
+// - `isTest` marks financial rows created by the mock payment provider or the
+//   test-mode commission engine. No real money is ever associated with them.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Identity
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+model User {
+  id                String     @id @default(cuid())
+  email             String     @unique
+  passwordHash      String
+  name              String
+  role              Role       @default(USER)
+  status            UserStatus @default(ACTIVE)
+  suspendedReason   String?
+  referralCode      String     @unique
+  affiliateOptIn    Boolean    @default(false)
+  affiliateOptInAt  DateTime?
+  onboardedAt       DateTime?
+  isSampleData      Boolean    @default(false)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  profile            Profile?
+  preferences        UserPreference?
+  sessions           Session[]
+  passwordResets     PasswordResetToken[]
+  cartItems          CartItem[]
+  orders             Order[]
+  entitlements       DigitalEntitlement[]
+  subscriptions      MembershipSubscription[]
+  referredBy         ReferralRelationship?    @relation("ReferredUser")
+  referrals          ReferralRelationship[]   @relation("Referrer")
+  commissionsEarned  CommissionRecord[]       @relation("CommissionBeneficiary")
+  commissionsCaused  CommissionRecord[]       @relation("CommissionBuyer")
+  ledgerEntries      CommissionLedgerEntry[]
+  payoutRequests     PayoutRequest[]          @relation("PayoutRequester")
+  payoutsReviewed    PayoutRequest[]          @relation("PayoutReviewer")
+  notifications      Notification[]
+  recentViews        RecentView[]
+  auditLogs          AuditLog[]
+  refundsCreated     Refund[]
+
+  @@index([role])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Profile {
+  id        String  @id @default(cuid())
+  userId    String  @unique
+  headline  String?
+  bio       String?
+  avatarHue Int     @default(258)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserPreference {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  interests        String[]
+  dashboardWidgets String[]
+  productUpdates   Boolean  @default(true)
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique
+  userId     String
+  expiresAt  DateTime
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Catalogue
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum LicenceType {
+  PERSONAL
+  COMMERCIAL
+}
+
+model ProductCategory {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String
+  sortOrder   Int       @default(0)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+}
+
+model Product {
+  id                  String          @id @default(cuid())
+  slug                String          @unique
+  name                String
+  tagline             String
+  description         String
+  categoryId          String
+  priceInPaise        Int
+  currency            String          @default("INR")
+  status              ProductStatus   @default(DRAFT)
+  format              String
+  licence             LicenceType     @default(PERSONAL)
+  licenceSummary      String
+  includes            String[]
+  fileFormats         String[]
+  artwork             String
+  accentHue           Int             @default(258)
+  includedWithPremium Boolean         @default(false)
+  commissionEligible  Boolean         @default(true)
+  featured            Boolean         @default(false)
+  isSampleData        Boolean         @default(false)
+  publishedAt         DateTime?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  category     ProductCategory      @relation(fields: [categoryId], references: [id])
+  assets       ProductAsset[]
+  orderItems   OrderItem[]
+  entitlements DigitalEntitlement[]
+  cartItems    CartItem[]
+
+  @@index([status])
+  @@index([categoryId])
+  @@index([featured])
+}
+
+model ProductAsset {
+  id         String   @id @default(cuid())
+  productId  String
+  label      String
+  fileName   String
+  // Path relative to PRIVATE_STORAGE_DIR. Never served statically.
+  storageKey String
+  mimeType   String
+  sizeBytes  Int
+  createdAt  DateTime @default(now())
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+enum ResourceAccess {
+  FREE
+  PREMIUM
+}
+
+model ResourceCollection {
+  id          String         @id @default(cuid())
+  slug        String         @unique
+  title       String
+  description String
+  accentHue   Int            @default(258)
+  sortOrder   Int            @default(0)
+  items       ResourceItem[]
+}
+
+model ResourceItem {
+  id             String             @id @default(cuid())
+  slug           String             @unique
+  collectionId   String
+  title          String
+  summary        String
+  kind           String
+  access         ResourceAccess     @default(FREE)
+  readingMinutes Int                @default(5)
+  // Lightweight markdown-ish body: paragraphs separated by blank lines,
+  // lines starting with "## " are headings, lines starting with "- " are bullets.
+  body           String
+  publishedAt    DateTime           @default(now())
+  collection     ResourceCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@index([collectionId])
+  @@index([access])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Commerce
+// ─────────────────────────────────────────────────────────────────────────────
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum OrderItemType {
+  PRODUCT
+  MEMBERSHIP
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  number          String      @unique
+  userId          String
+  status          OrderStatus @default(PENDING)
+  currency        String      @default("INR")
+  subtotalInPaise Int
+  taxInPaise      Int
+  totalInPaise    Int
+  taxRateBps      Int
+  taxLabel        String
+  // True when created against the mock payment provider. Never real money.
+  isTest          Boolean     @default(false)
+  isSampleData    Boolean     @default(false)
+  paidAt          DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user        User               @relation(fields: [userId], references: [id])
+  items       OrderItem[]
+  payments    Payment[]
+  refunds     Refund[]
+  commissions CommissionRecord[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id               String        @id @default(cuid())
+  orderId          String
+  type             OrderItemType
+  productId        String?
+  planId           String?
+  // Snapshots so historical orders stay accurate after catalogue edits.
+  name             String
+  unitPriceInPaise Int
+  quantity         Int           @default(1)
+  totalInPaise     Int
+  createdAt        DateTime      @default(now())
+
+  order        Order                    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product      Product?                 @relation(fields: [productId], references: [id])
+  plan         MembershipPlan?          @relation(fields: [planId], references: [id])
+  entitlement  DigitalEntitlement?
+  commissions  CommissionRecord[]
+  subscription MembershipSubscription?
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+enum PaymentStatus {
+  CREATED
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  orderId       String
+  provider      String
+  // Provider-side reference (e.g. a payment id). Unique per provider.
+  providerRef   String?
+  status        PaymentStatus @default(CREATED)
+  amountInPaise Int
+  failureReason String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerRef])
+  @@index([orderId])
+}
+
+// Every verified webhook event is recorded once; replays are ignored.
+model PaymentEvent {
+  id          String   @id @default(cuid())
+  provider    String
+  eventId     String
+  type        String
+  payload     Json
+  processedAt DateTime @default(now())
+
+  @@unique([provider, eventId])
+}
+
+enum EntitlementSource {
+  PURCHASE
+  ADMIN_GRANT
+}
+
+model DigitalEntitlement {
+  id           String            @id @default(cuid())
+  userId       String
+  productId    String
+  orderItemId  String?           @unique
+  source       EntitlementSource @default(PURCHASE)
+  isTest       Boolean           @default(false)
+  grantedAt    DateTime          @default(now())
+  revokedAt    DateTime?
+  revokeReason String?
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product    @relation(fields: [productId], references: [id])
+  orderItem OrderItem? @relation(fields: [orderItemId], references: [id])
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model Refund {
+  id            String   @id @default(cuid())
+  orderId       String
+  amountInPaise Int
+  reason        String
+  isTest        Boolean  @default(false)
+  createdById   String?
+  createdAt     DateTime @default(now())
+  order         Order    @relation(fields: [orderId], references: [id])
+  createdBy     User?    @relation(fields: [createdById], references: [id])
+
+  @@index([orderId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Membership
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum BillingInterval {
+  NONE
+  MONTH
+  YEAR
+}
+
+model MembershipPlan {
+  id           String          @id @default(cuid())
+  code         String          @unique
+  name         String
+  description  String
+  priceInPaise Int
+  interval     BillingInterval
+  benefits     String[]
+  billingTerms String
+  isActive     Boolean         @default(true)
+  sortOrder    Int             @default(0)
+  updatedAt    DateTime        @updatedAt
+
+  subscriptions MembershipSubscription[]
+  orderItems    OrderItem[]
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+}
+
+model MembershipSubscription {
+  id                 String             @id @default(cuid())
+  userId             String
+  planId             String
+  orderItemId        String?            @unique
+  status             SubscriptionStatus @default(ACTIVE)
+  provider           String
+  isTest             Boolean            @default(false)
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean            @default(false)
+  cancelledAt        DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan      MembershipPlan @relation(fields: [planId], references: [id])
+  orderItem OrderItem?     @relation(fields: [orderItemId], references: [id])
+
+  @@index([userId, status])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Affiliate programme
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ReferralSource {
+  LINK
+  CODE
+  SAMPLE
+}
+
+model ReferralRelationship {
+  id             String         @id @default(cuid())
+  referrerId     String
+  // A user can only ever be referred once.
+  referredUserId String         @unique
+  source         ReferralSource
+  codeUsed       String
+  attributedAt   DateTime       @default(now())
+
+  referrer     User @relation("Referrer", fields: [referrerId], references: [id])
+  referredUser User @relation("ReferredUser", fields: [referredUserId], references: [id], onDelete: Cascade)
+
+  @@index([referrerId])
+}
+
+enum CommissionMode {
+  DISABLED
+  TEST
+}
+
+// Singleton row (id = 1). There is deliberately no "LIVE" commission mode:
+// production accrual requires a code change after legal/financial approval.
+model AffiliateSettings {
+  id                    Int            @id @default(1)
+  programEnabled        Boolean        @default(true)
+  commissionMode        CommissionMode @default(TEST)
+  attributionWindowDays Int            @default(30)
+  holdPeriodDays        Int            @default(14)
+  minPayoutInPaise      Int            @default(100000)
+  updatedAt             DateTime       @updatedAt
+}
+
+model CommissionLevel {
+  level     Int      @id
+  rateBps   Int
+  enabled   Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+}
+
+enum CommissionStatus {
+  PENDING
+  APPROVED
+  REVERSED
+  PAID
+}
+
+model CommissionRecord {
+  id                String           @id @default(cuid())
+  beneficiaryId     String
+  buyerId           String
+  orderId           String
+  orderItemId       String
+  level             Int
+  rateBps           Int
+  baseAmountInPaise Int
+  amountInPaise     Int
+  status            CommissionStatus @default(PENDING)
+  isTest            Boolean          @default(true)
+  reversalReason    String?
+  approvedAt        DateTime?
+  reversedAt        DateTime?
+  payoutRequestId   String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  beneficiary   User                    @relation("CommissionBeneficiary", fields: [beneficiaryId], references: [id])
+  buyer         User                    @relation("CommissionBuyer", fields: [buyerId], references: [id])
+  order         Order                   @relation(fields: [orderId], references: [id])
+  orderItem     OrderItem               @relation(fields: [orderItemId], references: [id])
+  payoutRequest PayoutRequest?          @relation(fields: [payoutRequestId], references: [id])
+  ledger        CommissionLedgerEntry[]
+
+  // One commission per order item per level — prevents duplicate accrual.
+  @@unique([orderItemId, level])
+  @@index([beneficiaryId, status])
+  @@index([orderId])
+}
+
+enum LedgerEntryType {
+  ACCRUED
+  APPROVED
+  REVERSED
+  PAID_OUT
+}
+
+// Append-only. Rows are never updated or deleted by application code.
+model CommissionLedgerEntry {
+  id            String          @id @default(cuid())
+  commissionId  String
+  beneficiaryId String
+  type          LedgerEntryType
+  // Signed amount: positive for accruals, negative for reversals.
+  amountInPaise Int
+  note          String?
+  actorId       String?
+  createdAt     DateTime        @default(now())
+
+  commission  CommissionRecord @relation(fields: [commissionId], references: [id])
+  beneficiary User             @relation(fields: [beneficiaryId], references: [id])
+
+  @@index([beneficiaryId])
+  @@index([commissionId])
+}
+
+enum PayoutStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  PAID
+}
+
+model PayoutRequest {
+  id            String       @id @default(cuid())
+  userId        String
+  amountInPaise Int
+  status        PayoutStatus @default(REQUESTED)
+  isTest        Boolean      @default(true)
+  note          String?
+  reviewNote    String?
+  reviewedById  String?
+  reviewedAt    DateTime?
+  createdAt     DateTime     @default(now())
+
+  user        User               @relation("PayoutRequester", fields: [userId], references: [id])
+  reviewedBy  User?              @relation("PayoutReviewer", fields: [reviewedById], references: [id])
+  commissions CommissionRecord[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Platform
+// ─────────────────────────────────────────────────────────────────────────────
+
+model PlatformSettings {
+  id                Int      @id @default(1)
+  taxRateBps        Int      @default(1800)
+  taxLabel          String   @default("GST (placeholder rate)")
+  supportEmail      String   @default("support@lifeos.example")
+  announcement      String?
+  signupsEnabled    Boolean  @default(true)
+  updatedAt         DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  actor      User?    @relation(fields: [actorId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([actorId])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+}
+
+enum RecentViewKind {
+  PRODUCT
+  RESOURCE
+  TOOL
+}
+
+model RecentView {
+  id       String         @id @default(cuid())
+  userId   String
+  kind     RecentViewKind
+  refId    String
+  viewedAt DateTime       @default(now())
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind, refId])
+  @@index([userId, viewedAt])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  topic     String
+  message   String
+  createdAt DateTime @default(now())
+}

@@ -1,0 +1,183 @@
+@import "tailwindcss";
+
+/* ───────────────────────────────────────────────────────────────────────────
+   LifeOS design tokens
+   Warm, calm light theme. Violet is an accent, not a background.
+   ─────────────────────────────────────────────────────────────────────────── */
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+
+  --color-canvas: #f8f7f4;
+  --color-sunken: #f1efea;
+  --color-surface: #ffffff;
+  --color-ink: #191919;
+  --color-ink-2: #5f5b55;
+  --color-ink-3: #8f8a82;
+  --color-line: #e8e5de;
+  --color-line-strong: #d8d3c9;
+
+  --color-accent: #7557f6;
+  --color-accent-strong: #5f42e6;
+  --color-accent-ink: #4a32b8;
+  --color-lavender: #efebfe;
+  --color-lavender-2: #ddd5fd;
+
+  --color-success: #2f7a55;
+  --color-success-soft: #e7f2eb;
+  --color-warning: #9a6a14;
+  --color-warning-soft: #f8efdc;
+  --color-danger: #b0412f;
+  --color-danger-soft: #f9e9e5;
+
+  --radius-control: 10px;
+  --radius-panel: 18px;
+
+  --shadow-soft: 0 1px 2px rgb(25 25 25 / 0.04), 0 1px 1px rgb(25 25 25 / 0.03);
+  --shadow-lift: 0 1px 2px rgb(25 25 25 / 0.04), 0 8px 24px -12px rgb(25 25 25 / 0.12);
+  --shadow-float: 0 2px 4px rgb(25 25 25 / 0.04), 0 24px 48px -24px rgb(40 30 90 / 0.22);
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-fade-up: fade-up 420ms var(--ease-out-soft) both;
+  --animate-fade-in: fade-in 240ms ease-out both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes shimmer {
+    from { background-position: -400px 0; }
+    to { background-position: 400px 0; }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+  }
+  ::selection {
+    background: var(--color-lavender-2);
+    color: var(--color-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  /* Inputs carry their own focus ring */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
+  }
+  h1, h2, h3, h4 {
+    text-wrap: balance;
+    letter-spacing: -0.02em;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  [hidden] {
+    display: none !important;
+  }
+}
+
+@layer components {
+  .text-display {
+    font-size: clamp(2.75rem, 6.4vw, 5.25rem);
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+    font-weight: 600;
+  }
+  .text-headline {
+    font-size: clamp(2rem, 3.6vw, 3rem);
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+  }
+  .text-title {
+    font-size: 1.375rem;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+  .eyebrow {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--color-ink-3);
+  }
+  .serif-accent {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  .skeleton {
+    background: linear-gradient(90deg, var(--color-sunken) 0px, #f7f5f1 160px, var(--color-sunken) 320px);
+    background-size: 800px 100%;
+    animation: var(--animate-shimmer);
+    border-radius: 8px;
+  }
+  .hairline-grid {
+    background-image:
+      linear-gradient(to right, rgb(25 25 25 / 0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(25 25 25 / 0.045) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .hero-glow {
+    background:
+      radial-gradient(60% 55% at 70% 18%, rgb(117 87 246 / 0.16) 0%, transparent 70%),
+      radial-gradient(45% 40% at 18% 30%, rgb(244 196 160 / 0.22) 0%, transparent 70%);
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Print: documents from the Resume & Proposal builders ─────────────── */
+@media print {
+  @page { margin: 14mm; }
+  body { background: white !important; }
+  .print-hidden { display: none !important; }
+  .print-only { display: block !important; }
+  .print-document {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+  .print-area { position: static !important; }
+}
+.print-only { display: none; }
