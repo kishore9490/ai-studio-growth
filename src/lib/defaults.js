@@ -1,6 +1,10 @@
-export const STORAGE_KEY = 'emca-letterhead-v1';
+import brand from '@brand';
+
+export { brand };
+export const STORAGE_KEY = brand.storageKey;
 
 export const COLOR_PRESETS = [
+  ...brand.presets,
   { id: 'navy-teal', name: 'Navy & Teal', primary: '#0B2545', secondary: '#0E9F9A' },
   { id: 'emc-logo', name: 'EMC Logo Blue', primary: '#0B4A9E', secondary: '#13B5D6' },
   { id: 'royal-sky', name: 'Royal & Sky', primary: '#1C3F8C', secondary: '#1BA3D9' },
@@ -13,6 +17,7 @@ export const DESIGNS = [
   { id: 'classic', name: 'Clinical Classic', note: 'White header, accent rule, ECG detail' },
   { id: 'band', name: 'Executive Band', note: 'Solid colour header and footer bands' },
   { id: 'elegant', name: 'Elegant Minimal', note: 'Serif name, fine hairlines' },
+  { id: 'ribbon', name: 'Corporate Ribbon', note: 'Slanted colour ribbons, icon chips' },
 ];
 
 export const LOGO_STYLES = [
@@ -22,7 +27,7 @@ export const LOGO_STYLES = [
   { id: 'monogram', name: 'Monogram' },
 ];
 
-export const DEFAULT_STATE = {
+const BASE_STATE = {
   academy: {
     name: 'Expert Medical Coding Academy',
     tagline: 'Excellence in Medical Coding Training & Certification',
@@ -45,6 +50,7 @@ export const DEFAULT_STATE = {
     accreditation: '',
     footerText: '',
     additionalInfo: '',
+    customDetails: [],
   },
   letter: {
     refNo: '',
@@ -84,6 +90,7 @@ export const DEFAULT_STATE = {
     social: true,
     footerText: true,
     additionalInfo: true,
+    customDetails: true,
   },
   exportOpts: {
     fileName: 'EMCA-Letterhead',
@@ -91,25 +98,25 @@ export const DEFAULT_STATE = {
   },
 };
 
-export const SAMPLE_DETAILS = {
-  academy: {
-    address: '2nd Floor, Lakshmi Towers, 45/2 Anna Salai, Near Gemini Flyover, Teynampet',
-    city: 'Chennai',
-    state: 'Tamil Nadu',
-    pin: '600018',
-    phone: '+91 98765 43210',
-    whatsapp: '+91 98765 43210',
-    email: 'info@expertmedicalcoding.in',
-    website: 'www.expertmedicalcoding.in',
-    regNo: 'TN/EDU/2024/01873',
-  },
-  extra: {
-    linkedin: 'linkedin.com/company/expert-medical-coding-academy',
-    instagram: 'instagram.com/expertmedicalcoding',
-    accreditation: 'Training aligned with AAPC CPC® & AHIMA CCS® certification standards',
-    footerText: 'Shaping certified medical coders since 2015',
-  },
-};
+function applyOverrides(base, overrides) {
+  const out = structuredClone(base);
+  for (const [group, values] of Object.entries(overrides || {})) out[group] = { ...out[group], ...values };
+  return out;
+}
+
+export const DEFAULT_STATE = applyOverrides(BASE_STATE, brand.overrides);
+
+export const SAMPLE_DETAILS = brand.sample;
+
+export const DETAIL_SUGGESTIONS = ['GSTIN', 'LLPIN', 'CIN', 'PAN', 'Udyam No.', 'ISO Cert. No.'];
+
+export function cleanCustomDetails(list) {
+  if (!Array.isArray(list)) return [];
+  return list
+    .filter((d) => d && typeof d === 'object')
+    .map((d) => ({ label: String(d.label ?? '').slice(0, 30), value: String(d.value ?? '').slice(0, 60) }))
+    .slice(0, 8);
+}
 
 export function initialsFrom(name) {
   const skip = new Set(['of', 'and', 'the', '&', 'for', 'in']);
@@ -118,16 +125,20 @@ export function initialsFrom(name) {
   return s.slice(0, 4) || 'A';
 }
 
-// Deep-merge saved data over defaults so new fields added later still get defaults.
+// Merge saved data over defaults so fields added later still get defaults.
 export function mergeState(saved) {
   const out = structuredClone(DEFAULT_STATE);
   if (!saved || typeof saved !== 'object') return out;
   for (const key of Object.keys(out)) {
-    if (saved[key] && typeof saved[key] === 'object') {
-      for (const k of Object.keys(out[key])) {
-        if (saved[key][k] !== undefined && typeof saved[key][k] === typeof out[key][k]) {
-          out[key][k] = saved[key][k];
-        }
+    const group = saved[key];
+    if (!group || typeof group !== 'object') continue;
+    for (const k of Object.keys(out[key])) {
+      const v = group[k];
+      if (v === undefined) continue;
+      if (Array.isArray(out[key][k])) {
+        if (Array.isArray(v)) out[key][k] = cleanCustomDetails(v);
+      } else if (typeof v === typeof out[key][k]) {
+        out[key][k] = v;
       }
     }
   }

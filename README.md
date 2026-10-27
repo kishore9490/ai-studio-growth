@@ -1,4 +1,14 @@
-# EMCA Letterhead Studio
+# Letterhead Studio (EMCA and JCH)
+
+Two ready-to-use letterhead tools are built from the same code:
+
+| File | For | Opens with |
+|---|---|---|
+| `EMCA-Letterhead-Studio.html` | Expert Medical Coding Academy | Academy name, Navy & Teal, Clinical Classic design |
+| `JCH-Letterhead-Studio.html` | JCH Business Solutions LLP | JCH logo, address, email, phone, LLPIN and GSTIN, JCH Blue, Corporate Ribbon design |
+
+Both work the same way and have the same features. Each one keeps its own saved details in the browser.
+
 
 A letterhead generator for **Expert Medical Coding Academy**. You fill in your academy details, pick a design and colours, and see the result on a live A4 preview. When it looks right, download it as a PDF or Word file, or print it.
 
@@ -6,7 +16,7 @@ Everything runs in the browser. There is no account, no server and no paid servi
 
 ## Quick start (no installation)
 
-1. Download **`EMCA-Letterhead-Studio.html`** from this repository (open the file on GitHub, then click **Download raw file**).
+1. Download **`EMCA-Letterhead-Studio.html`** or **`JCH-Letterhead-Studio.html`** from this repository (open the file on GitHub, then click **Download raw file**).
 2. Double-click it. It opens in your browser (Chrome, Edge, Firefox or Safari).
 3. Fill in your details, upload your logo, and use **Download PDF**, **Word**, **Blank Letterhead** or **Print**.
 
@@ -19,8 +29,9 @@ It works offline. Nothing is installed and nothing is sent anywhere. Your detail
 - **Academy details:** name (the only required field), tagline, address, city, state, PIN, phone, WhatsApp, email (validated), website, registration number.
 - **Logo:** upload your own (PNG, JPG, SVG or WEBP). Empty white or transparent space around the artwork is trimmed automatically. If you have no logo, create one from four medical-coding styles (Code + Cross, Pulse Cross, Shield, Monogram). You can replace or remove the logo and adjust its size.
 - **Colours:** six presets (Navy & Teal is the default, plus EMC Logo Blue to match the EMC logo), or any custom primary and secondary colour.
-- **Three designs:** Clinical Classic, Executive Band and Elegant Minimal. Each has a left-aligned or centered header.
+- **Four designs:** Clinical Classic, Executive Band, Elegant Minimal and Corporate Ribbon. Each has a left-aligned or centered header.
 - **Show or hide** each contact detail, the academy name beside the logo, the tagline, the footer and a faint logo watermark. You can also put the phone, email and website in the header or the footer.
+- **More details:** add any label and value, such as GSTIN, LLPIN, CIN, PAN or Udyam No. (up to 8). They show under the contact details, or in the footer.
 - **Additional info:** social links, accreditation, footer text and any extra line.
 - **Letter content (optional):** reference number, date, subject, body and signatory. These are included in *Download PDF* and *Word*.
 - **Exports**
@@ -41,12 +52,17 @@ npm run dev        # open the address it prints, e.g. http://localhost:5173
 
 ### Build for hosting
 
-To update `EMCA-Letterhead-Studio.html` after changing the code, run `npm run build:single` and copy `dist-single/index.html` over it.
+To update the two HTML files after changing the code, run `npm run build:single` and `npm run build:jch-single`, then copy `dist-single/index.html` to `EMCA-Letterhead-Studio.html` and `dist-jch-single/index.html` to `JCH-Letterhead-Studio.html`.
 
 ```bash
 npm run build          # static site in dist/ (upload to any web host)
 npm run build:single   # one self-contained HTML file in dist-single/index.html
+
+npm run dev:jch            # JCH version
+npm run build:jch-single   # JCH single file in dist-jch-single/index.html
 ```
+
+Brand defaults (name, contact details, colours, logo, design) live in `src/brands/emca.js` and `src/brands/jch.js`. To make a tool for another organisation, copy one of these files, then add a matching mode in `vite.config.js` and a script in `package.json`.
 
 You can email `dist-single/index.html` or put it on a USB drive and open it by double-clicking. It needs no internet connection.
 

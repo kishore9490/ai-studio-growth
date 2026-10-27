@@ -2,12 +2,12 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import {
   Building2, Palette, LayoutTemplate, Contact, Share2, FileText, Download, Printer, FileDown, FileType2,
   Upload, Trash2, RefreshCw, ImageOff, Sparkles, ZoomIn, ZoomOut, Maximize2, AlignLeft, AlignCenter,
-  RotateCcw, CheckCircle2, AlertTriangle, Loader2, X, Eye, PencilLine, Settings2, CalendarDays, ImagePlus,
+  RotateCcw, CheckCircle2, AlertTriangle, Loader2, X, Eye, PencilLine, Settings2, CalendarDays, ImagePlus, ListPlus, Plus,
 } from 'lucide-react';
 import Letterhead from './components/Letterhead.jsx';
 import { Section, Field, Toggle, Segmented } from './components/ui.jsx';
 import {
-  DEFAULT_STATE, STORAGE_KEY, COLOR_PRESETS, DESIGNS, LOGO_STYLES, SAMPLE_DETAILS, initialsFrom, mergeState,
+  DEFAULT_STATE, STORAGE_KEY, COLOR_PRESETS, DESIGNS, LOGO_STYLES, SAMPLE_DETAILS, DETAIL_SUGGESTIONS, initialsFrom, mergeState, brand,
 } from './lib/defaults.js';
 import { makeLogoSvg, svgToDataUrl, toPngDataUrl, readFileAsDataUrl } from './lib/logo.js';
 import { buildPdf, buildDocx, saveFile, safeFileName, isHostedViewer } from './lib/exporters.js';
@@ -55,6 +55,11 @@ export default function App() {
   const set = useCallback((group, key, value) => {
     setData((d) => ({ ...d, [group]: { ...d[group], [key]: value } }));
   }, []);
+  const setDetails = useCallback((fn) => {
+    setData((d) => ({ ...d, extra: { ...d.extra, customDetails: fn(d.extra.customDetails || []) } }));
+  }, []);
+  const org = brand.orgWord;
+  const ph = brand.placeholders;
 
   const notify = useCallback((type, msg) => {
     clearTimeout(toastTimer.current);
@@ -114,7 +119,7 @@ export default function App() {
     whatsapp: a.whatsapp.trim() && !PHONE_RE.test(a.whatsapp.trim()) ? 'Use digits, spaces and + only, e.g. +91 98765 43210' : '',
     pin: a.pin.trim() && !/^\d{6}$/.test(a.pin.trim().replace(/\s/g, '')) ? 'Indian PIN codes have 6 digits. You can keep this if it is correct.' : '',
     website: a.website.trim() && /\s/.test(a.website.trim()) ? 'Website addresses cannot contain spaces.' : '',
-    name: a.name.trim() ? '' : 'Please enter the academy name. It is the only required field.',
+    name: a.name.trim() ? '' : `Please enter the ${org.toLowerCase()} name. It is the only required field.`,
   };
 
   // ---------- logo upload ----------
@@ -238,7 +243,7 @@ export default function App() {
             </div>
             <div>
               <div className="app-title">Letterhead Studio</div>
-              <div className="app-sub">{a.name.trim() || 'Your academy'}</div>
+              <div className="app-sub">{a.name.trim() || `Your ${org.toLowerCase()}`}</div>
             </div>
           </div>
           <div className="topbar-actions">{exportButtons}</div>
@@ -260,30 +265,76 @@ export default function App() {
           <aside className="panel" aria-label="Letterhead settings">
             <div className="panel-intro">
               <h1>Design your letterhead</h1>
-              <p>Fill in what you have. Only the academy name is required. Every change shows instantly in the preview.</p>
-              <button type="button" className="link-btn" onClick={fillSample}>
-                <Sparkles size={14} /> Try with sample details
-              </button>
+              <p>Fill in what you have. Only the {org.toLowerCase()} name is required. Every change shows instantly in the preview.</p>
+              {SAMPLE_DETAILS && (
+                <button type="button" className="link-btn" onClick={fillSample}>
+                  <Sparkles size={14} /> Try with sample details
+                </button>
+              )}
             </div>
 
-            <Section icon={Building2} title="Academy details" hint="Name, address and contact" defaultOpen>
-              <Field id="f-name" label="Academy name" optional={false} value={a.name} onChange={(v) => set('academy', 'name', v)} error={errors.name} maxLength={90} />
-              <Field id="f-tagline" label="Tagline" value={a.tagline} onChange={(v) => set('academy', 'tagline', v)} placeholder="e.g. Excellence in Medical Coding Training" maxLength={110} />
+            <Section icon={Building2} title={`${org} details`} hint="Name, address and contact" defaultOpen>
+              <Field id="f-name" label={`${org} name`} optional={false} value={a.name} onChange={(v) => set('academy', 'name', v)} error={errors.name} maxLength={90} />
+              <Field id="f-tagline" label="Tagline" value={a.tagline} onChange={(v) => set('academy', 'tagline', v)} placeholder={ph.tagline} maxLength={110} />
               <Field id="f-address" label="Full address" multiline rows={2} value={a.address} onChange={(v) => set('academy', 'address', v)} placeholder="Building, street, area" maxLength={220} />
               <div className="grid-2">
-                <Field id="f-city" label="City" value={a.city} onChange={(v) => set('academy', 'city', v)} placeholder="Chennai" maxLength={50} />
-                <Field id="f-state" label="State" value={a.state} onChange={(v) => set('academy', 'state', v)} placeholder="Tamil Nadu" maxLength={50} />
+                <Field id="f-city" label="City" value={a.city} onChange={(v) => set('academy', 'city', v)} placeholder={ph.city} maxLength={50} />
+                <Field id="f-state" label="State" value={a.state} onChange={(v) => set('academy', 'state', v)} placeholder={ph.state} maxLength={50} />
               </div>
               <div className="grid-2">
-                <Field id="f-pin" label="PIN code" value={a.pin} onChange={(v) => set('academy', 'pin', v)} placeholder="600001" error={errors.pin} maxLength={12} />
+                <Field id="f-pin" label="PIN code" value={a.pin} onChange={(v) => set('academy', 'pin', v)} placeholder={ph.pin} error={errors.pin} maxLength={12} />
                 <Field id="f-reg" label="Registration no." value={a.regNo} onChange={(v) => set('academy', 'regNo', v)} placeholder="If registered" maxLength={60} />
               </div>
               <div className="grid-2">
                 <Field id="f-phone" label="Phone" type="tel" value={a.phone} onChange={(v) => set('academy', 'phone', v)} placeholder="+91 98765 43210" error={errors.phone} maxLength={30} />
                 <Field id="f-wa" label="WhatsApp" type="tel" value={a.whatsapp} onChange={(v) => set('academy', 'whatsapp', v)} placeholder="+91 98765 43210" error={errors.whatsapp} maxLength={30} />
               </div>
-              <Field id="f-email" label="Official email" type="email" value={a.email} onChange={(v) => set('academy', 'email', v)} placeholder="info@youracademy.in" error={errors.email} maxLength={80} />
-              <Field id="f-web" label="Website" value={a.website} onChange={(v) => set('academy', 'website', v)} placeholder="www.youracademy.in" error={errors.website} maxLength={80} />
+              <Field id="f-email" label="Official email" type="email" value={a.email} onChange={(v) => set('academy', 'email', v)} placeholder="info@yourdomain.in" error={errors.email} maxLength={80} />
+              <Field id="f-web" label="Website" value={a.website} onChange={(v) => set('academy', 'website', v)} placeholder="www.yourdomain.in" error={errors.website} maxLength={80} />
+            </Section>
+
+            <Section icon={ListPlus} title="More details" hint="GSTIN, LLPIN, CIN or anything else" defaultOpen={(x.customDetails || []).length > 0}>
+              <p className="sec-note">Add any other detail as a label and value, for example GSTIN 29AALFJ2957J1ZR. They appear under the contact details, or in the footer if contacts are placed there.</p>
+              {(x.customDetails || []).map((d, i) => (
+                <div className="detail-row" key={i}>
+                  <input
+                    id={`f-dl-${i}`}
+                    aria-label={`Detail ${i + 1} label`}
+                    className="detail-label"
+                    value={d.label}
+                    placeholder="Label"
+                    maxLength={30}
+                    onChange={(e) => setDetails((list) => list.map((it, j) => (j === i ? { ...it, label: e.target.value } : it)))}
+                  />
+                  <input
+                    id={`f-dv-${i}`}
+                    aria-label={`Detail ${i + 1} value`}
+                    value={d.value}
+                    placeholder="Value"
+                    maxLength={60}
+                    onChange={(e) => setDetails((list) => list.map((it, j) => (j === i ? { ...it, value: e.target.value } : it)))}
+                  />
+                  <button type="button" className="icon-btn" aria-label={`Remove ${d.label || 'detail'}`} onClick={() => setDetails((list) => list.filter((_, j) => j !== i))}>
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              ))}
+              {(x.customDetails || []).length < 8 ? (
+                <div className="detail-add">
+                  <button type="button" className="btn btn-sm" onClick={() => setDetails((list) => [...list, { label: '', value: '' }])}>
+                    <Plus size={14} /> Add a detail
+                  </button>
+                  <div className="detail-suggest">
+                    {DETAIL_SUGGESTIONS.filter((s) => !(x.customDetails || []).some((d) => d.label.trim().toLowerCase() === s.toLowerCase())).map((s) => (
+                      <button key={s} type="button" className="chip-btn" onClick={() => setDetails((list) => [...list, { label: s, value: '' }])}>
+                        + {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="sec-note">You can add up to 8 details.</p>
+              )}
             </Section>
 
             <Section icon={ImagePlus} title="Logo" hint={b.logoMode === 'upload' ? 'Your uploaded logo' : b.logoMode === 'generated' ? 'Created logo' : 'No logo'}>
@@ -293,7 +344,7 @@ export default function App() {
                 onChange={(v) => set('branding', 'logoMode', v)}
                 options={[
                   { value: 'upload', label: 'Upload', icon: Upload },
-                  { value: 'generated', label: 'Create', icon: Sparkles },
+                  ...(brand.allowGeneratedLogo ? [{ value: 'generated', label: 'Create', icon: Sparkles }] : []),
                   { value: 'none', label: 'None', icon: ImageOff },
                 ]}
               />
@@ -350,9 +401,9 @@ export default function App() {
                       <span className="dz-icon">
                         <Upload size={20} />
                       </span>
-                      <span className="dz-title">Upload your academy logo</span>
+                      <span className="dz-title">Upload your logo</span>
                       <span className="dz-sub">Drag a file here or click to browse. PNG with a transparent background works best (PNG, JPG, SVG, WEBP, up to 5 MB).</span>
-                      <span className="dz-alt">
+                      {brand.allowGeneratedLogo && <span className="dz-alt">
                         No logo yet?{' '}
                         <span
                           role="link"
@@ -365,7 +416,7 @@ export default function App() {
                         >
                           Create one instead
                         </span>
-                      </span>
+                      </span>}
                     </button>
                   )}
                 </>
@@ -393,7 +444,7 @@ export default function App() {
                     value={b.logoInitials}
                     onChange={(v) => set('branding', 'logoInitials', v.toUpperCase().slice(0, 4))}
                     placeholder={initialsFrom(a.name)}
-                    help="Used by the Shield and Monogram styles. Leave empty to use the academy name's initials."
+                    help={`Used by the Shield and Monogram styles. Leave empty to use the ${org.toLowerCase()} name's initials.`}
                     maxLength={4}
                   />
                 </>
@@ -516,7 +567,7 @@ export default function App() {
                 />
               </div>
               <div className="toggles">
-                <Toggle id="t-name" label="Show academy name beside logo" checked={lay.showName} onChange={(v) => set('layout', 'showName', v)} disabled={!logoSrc} />
+                <Toggle id="t-name" label={`Show ${org.toLowerCase()} name beside logo`} checked={lay.showName} onChange={(v) => set('layout', 'showName', v)} disabled={!logoSrc} />
                 <Toggle id="t-tagline" label="Show tagline" checked={lay.showTagline} onChange={(v) => set('layout', 'showTagline', v)} />
                 <Toggle id="t-footer" label="Show footer" checked={lay.showFooter} onChange={(v) => set('layout', 'showFooter', v)} />
                 <Toggle id="t-watermark" label="Faint logo watermark" checked={lay.showWatermark} onChange={(v) => set('layout', 'showWatermark', v)} disabled={!logoSrc} />
@@ -532,6 +583,7 @@ export default function App() {
                   ['website', 'Website', a.website],
                   ['address', 'Address', a.address || a.city || a.state || a.pin],
                   ['regNo', 'Registration number', a.regNo],
+                  ['customDetails', 'More details (GSTIN etc.)', (x.customDetails || []).map((d) => d.value).join('')],
                   ['accreditation', 'Accreditation / affiliation', x.accreditation],
                   ['social', 'Social media links', x.facebook || x.instagram || x.linkedin || x.youtube || x.twitter],
                   ['footerText', 'Footer text', x.footerText],
@@ -571,7 +623,7 @@ export default function App() {
                 Type a letter here to include it in <strong>Download PDF</strong> and <strong>Word</strong>. The <strong>Blank Letterhead</strong> download always leaves the writing area empty.
               </p>
               <div className="grid-2">
-                <Field id="f-ref" label="Reference no." value={l.refNo} onChange={(v) => set('letter', 'refNo', v)} placeholder="EMCA/2026/014" maxLength={50} />
+                <Field id="f-ref" label="Reference no." value={l.refNo} onChange={(v) => set('letter', 'refNo', v)} placeholder={ph.refNo} maxLength={50} />
                 <div className="field">
                   <label htmlFor="f-date">
                     Date <span className="opt">Optional</span>
@@ -584,7 +636,7 @@ export default function App() {
                   </div>
                 </div>
               </div>
-              <Field id="f-subject" label="Subject" value={l.subject} onChange={(v) => set('letter', 'subject', v)} placeholder="e.g. Internship Completion Certificate" maxLength={140} />
+              <Field id="f-subject" label="Subject" value={l.subject} onChange={(v) => set('letter', 'subject', v)} placeholder={ph.subject} maxLength={140} />
               <Field id="f-body" label="Letter body" multiline rows={7} value={l.body} onChange={(v) => set('letter', 'body', v)} placeholder={'Dear Student,\n\n…'} maxLength={6000} />
               {overflow && (
                 <div className="warn">
@@ -592,13 +644,13 @@ export default function App() {
                 </div>
               )}
               <div className="grid-2">
-                <Field id="f-sign" label="Signatory name" value={l.signName} onChange={(v) => set('letter', 'signName', v)} placeholder="Dr. A. Kumar" maxLength={60} />
-                <Field id="f-signt" label="Designation" value={l.signTitle} onChange={(v) => set('letter', 'signTitle', v)} placeholder="Director" maxLength={60} />
+                <Field id="f-sign" label="Signatory name" value={l.signName} onChange={(v) => set('letter', 'signName', v)} placeholder={ph.signName} maxLength={60} />
+                <Field id="f-signt" label="Designation" value={l.signTitle} onChange={(v) => set('letter', 'signTitle', v)} placeholder={ph.signTitle} maxLength={60} />
               </div>
             </Section>
 
             <Section icon={Settings2} title="Export settings" hint={`${exportOpts.quality === 'high' ? 'High quality' : 'Standard quality'} · ${baseName}`}>
-              <Field id="f-filename" label="File name" value={exportOpts.fileName} onChange={(v) => set('exportOpts', 'fileName', v)} placeholder="EMCA-Letterhead" maxLength={60} />
+              <Field id="f-filename" label="File name" value={exportOpts.fileName} onChange={(v) => set('exportOpts', 'fileName', v)} placeholder={ph.fileName} maxLength={60} />
               <div className="field">
                 <span className="label-plain">Image quality</span>
                 <Segmented

@@ -1,0 +1,41 @@
+// Brand profile: Expert Medical Coding Academy (the default build).
+export default {
+  id: 'emca',
+  appTitle: 'EMCA Letterhead Studio',
+  orgWord: 'Academy',
+  storageKey: 'emca-letterhead-v1',
+  allowGeneratedLogo: true,
+  presets: [],
+  placeholders: {
+    city: 'Chennai',
+    state: 'Tamil Nadu',
+    pin: '600001',
+    name: 'Expert Medical Coding Academy',
+    tagline: 'e.g. Excellence in Medical Coding Training',
+    refNo: 'EMCA/2026/014',
+    subject: 'e.g. Internship Completion Certificate',
+    signName: 'Dr. A. Kumar',
+    signTitle: 'Director',
+    fileName: 'EMCA-Letterhead',
+  },
+  overrides: {},
+  sample: {
+    academy: {
+      address: '2nd Floor, Lakshmi Towers, 45/2 Anna Salai, Near Gemini Flyover, Teynampet',
+      city: 'Chennai',
+      state: 'Tamil Nadu',
+      pin: '600018',
+      phone: '+91 98765 43210',
+      whatsapp: '+91 98765 43210',
+      email: 'info@expertmedicalcoding.in',
+      website: 'www.expertmedicalcoding.in',
+      regNo: 'TN/EDU/2024/01873',
+    },
+    extra: {
+      linkedin: 'linkedin.com/company/expert-medical-coding-academy',
+      instagram: 'instagram.com/expertmedicalcoding',
+      accreditation: 'Training aligned with AAPC CPC® & AHIMA CCS® certification standards',
+      footerText: 'Shaping certified medical coders since 2015',
+    },
+  },
+};

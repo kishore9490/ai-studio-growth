@@ -17,13 +17,93 @@ function nameSize(name, base) {
   return Math.max(base * 0.62, base - (len - 26) * 0.42);
 }
 
-function ContactItem({ icon: Icon, icon2: Icon2, children, color, nowrap }) {
+// Blend two hex colours (t = 0 gives a, t = 1 gives b).
+function mix(a, b, t) {
+  const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) || 0);
+  const [x, y] = [p(a), p(b)];
+  return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('');
+}
+
+function ContactItem({ icon: Icon, icon2: Icon2, children, color, nowrap, chip }) {
+  const glyph = (I) =>
+    chip ? (
+      <span className="lh-chip">
+        <I size={9} strokeWidth={2.4} color="#ffffff" />
+      </span>
+    ) : (
+      <I size={11} strokeWidth={2.2} color={color} className="lh-ci-icon" />
+    );
   return (
     <span className={`lh-ci ${nowrap ? 'lh-nowrap' : ''}`}>
-      <Icon size={11} strokeWidth={2.2} color={color} className="lh-ci-icon" />
-      {Icon2 && <Icon2 size={11} strokeWidth={2.2} color={color} className="lh-ci-icon" />}
+      {glyph(Icon)}
+      {Icon2 && glyph(Icon2)}
       <span className="lh-ci-text">{children}</span>
     </span>
+  );
+}
+
+// Business IDs (GSTIN, LLPIN, ...). `perLine` keeps rows tidy so a wrap never starts with a separator.
+function IdLine({ items, perLine = 3 }) {
+  const rows = [];
+  for (let i = 0; i < items.length; i += perLine) rows.push(items.slice(i, i + perLine));
+  return (
+    <span className="lh-ids">
+      {rows.map((row, r) => (
+        <span className="lh-ids-row" key={r}>
+          {row.map((d, i) => (
+            <span className="lh-id-item" key={i}>
+              {i > 0 && <span className="lh-id-sep">|</span>}
+              {clean(d.label) && <span className="lh-id-label">{clean(d.label)}</span>}
+              <span className="lh-id-value">{clean(d.value)}</span>
+            </span>
+          ))}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+// Slanted three-colour ribbon band used by the Corporate Ribbon design (drawn in mm units).
+function RibbonStrip({ p, m, s, bottom, gid }) {
+  const polys = bottom
+    ? [
+        ['-10,0 40,0 47,7 -10,7', `url(#${gid})`],
+        ['42.2,0 82,0 89,7 49.2,7', m],
+        ['84.2,0 225,0 225,7 91.2,7', p],
+      ]
+    : [
+        ['-10,0 128,0 121,7 -10,7', p],
+        ['130.2,0 170,0 163,7 123.2,7', m],
+        ['172.2,0 225,0 218,7 165.2,7', `url(#${gid})`],
+      ];
+  return (
+    <svg className="lh-ribbon" width="100%" height="100%" viewBox="0 0 210 7" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id={gid} x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stopColor={bottom ? mix(s, '#ffffff', 0.18) : s} />
+          <stop offset="1" stopColor={bottom ? s : mix(s, '#ffffff', 0.18)} />
+        </linearGradient>
+      </defs>
+      {polys.map(([pts, fill], i) => (
+        <polygon key={i} points={pts} fill={fill} />
+      ))}
+    </svg>
+  );
+}
+
+function RibbonDivider({ m, s, centered, gid }) {
+  const accent = centered ? '70,0 104,0 103.2,1.2 70.8,1.2' : '0,0 34,0 33.2,1.2 0,1.2';
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 174 1.2" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id={gid} x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stopColor={m} />
+          <stop offset="1" stopColor={s} />
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0.43" width="174" height="0.34" fill="#C8D5EA" />
+      <polygon points={accent} fill={`url(#${gid})`} />
+    </svg>
   );
 }
 
@@ -48,6 +128,9 @@ const Letterhead = forwardRef(function Letterhead({ data, logoSrc, blank = false
   const design = lay.design;
   const centered = lay.align === 'center';
   const iconColor = s;
+  const m = mix(p, s, 0.45);
+  const ribbon = design === 'ribbon';
+  const ids = show.customDetails ? (x.customDetails || []).filter((d) => clean(d.value)) : [];
 
   const contacts = [];
   const phone = clean(a.phone);
@@ -93,7 +176,7 @@ const Letterhead = forwardRef(function Letterhead({ data, logoSrc, blank = false
     <div className="lh-id">
       {(lay.showName || !logoSrc) && (
         <div className="lh-name" style={{ fontSize: nSize }}>
-          {clean(a.name) || 'Academy Name'}
+          {clean(a.name) || 'Your Name'}
         </div>
       )}
       {lay.showTagline && clean(a.tagline) && <div className="lh-tagline">{clean(a.tagline)}</div>}
@@ -101,28 +184,47 @@ const Letterhead = forwardRef(function Letterhead({ data, logoSrc, blank = false
     </div>
   );
 
+  const headerIds = contactsInHeader ? ids : [];
+  const footerIds = contactsInHeader ? [] : ids;
+
   const contactBlock =
-    headerContacts.length > 0 ? (
+    headerContacts.length > 0 || headerIds.length > 0 ? (
       <div className="lh-contacts">
         {headerContacts.map((c) => (
-          <ContactItem key={c.key} icon={c.icon} icon2={c.icon2} color={iconColor} nowrap={c.key === 'phone' || c.key === 'wa'}>
+          <ContactItem key={c.key} icon={c.icon} icon2={c.icon2} color={iconColor} chip={ribbon} nowrap={c.key === 'phone' || c.key === 'wa'}>
             {c.text}
           </ContactItem>
         ))}
+        {headerIds.length > 0 && <IdLine items={headerIds} perLine={centered ? 3 : 2} />}
       </div>
     ) : null;
 
   const footerLines = [];
-  if (address) footerLines.push({ key: 'addr', content: <ContactItem icon={MapPin} color={iconColor}>{address}</ContactItem> });
+  if (address)
+    footerLines.push({
+      key: 'addr',
+      content: (
+        <ContactItem icon={MapPin} color={iconColor} chip={ribbon}>
+          {ribbon && clean(a.name) && (
+            <>
+              <span className="lh-fname">{clean(a.name)}</span>
+              <span className="lh-id-sep">|</span>
+            </>
+          )}
+          {address}
+        </ContactItem>
+      ),
+    });
   if (footerContacts.length)
     footerLines.push({
       key: 'fc',
       content: footerContacts.map((c) => (
-        <ContactItem key={c.key} icon={c.icon} icon2={c.icon2} color={iconColor} nowrap={c.key === 'phone' || c.key === 'wa'}>
+        <ContactItem key={c.key} icon={c.icon} icon2={c.icon2} color={iconColor} chip={ribbon} nowrap={c.key === 'phone' || c.key === 'wa'}>
           {c.text}
         </ContactItem>
       )),
     });
+  if (footerIds.length) footerLines.push({ key: 'ids', content: <IdLine items={footerIds} /> });
   const metaBits = [regLine && !(design === 'elegant' && contactsInHeader) ? regLine : '', accLine].filter(Boolean);
   if (metaBits.length) footerLines.push({ key: 'meta', content: <span className="lh-meta">{metaBits.join('  ·  ')}</span> });
   if (socials.length)
@@ -144,7 +246,7 @@ const Letterhead = forwardRef(function Letterhead({ data, logoSrc, blank = false
       ref={ref}
       id={idPrefix}
       className={`lh lh--${design} ${centered ? 'lh--center' : 'lh--left'}`}
-      style={{ '--p': p, '--s': s }}
+      style={{ '--p': p, '--s': s, '--m': m }}
     >
       {lay.showWatermark && logoSrc && (
         <div className="lh-watermark" aria-hidden="true">
@@ -153,6 +255,11 @@ const Letterhead = forwardRef(function Letterhead({ data, logoSrc, blank = false
       )}
 
       <header className="lh-header" data-part="header">
+        {ribbon && (
+          <div className="lh-ribbon-top">
+            <RibbonStrip p={p} m={m} s={s} gid={`${idPrefix}-rt`} />
+          </div>
+        )}
         {design === 'band' && (
           <div className="lh-band-texture" aria-hidden="true">
             <svg width="100%" height="100%" viewBox="0 0 800 170" preserveAspectRatio="xMaxYMid slice">
@@ -180,6 +287,11 @@ const Letterhead = forwardRef(function Letterhead({ data, logoSrc, blank = false
           <span className="lh-divider-line" />
           <Pulse color={s} width={96} />
           <span className="lh-divider-line lh-divider-line2" />
+        </div>
+      )}
+      {ribbon && (
+        <div className="lh-divider" data-part="divider">
+          <RibbonDivider m={m} s={s} centered={centered} gid={`${idPrefix}-rd`} />
         </div>
       )}
       {design === 'elegant' && (
@@ -227,6 +339,11 @@ const Letterhead = forwardRef(function Letterhead({ data, logoSrc, blank = false
               ))
             )}
           </div>
+          {ribbon && (
+            <div className="lh-ribbon-bottom">
+              <RibbonStrip p={p} m={m} s={s} bottom gid={`${idPrefix}-rb`} />
+            </div>
+          )}
           {design === 'classic' && (
             <div className="lh-footer-bar">
               <span style={{ background: s }} />
