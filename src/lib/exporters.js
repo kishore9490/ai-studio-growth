@@ -1,5 +1,6 @@
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import JSZip from 'jszip';
 import {
   Document,
   Packer,
@@ -187,7 +188,26 @@ export async function buildDocx(el, data, { scale = 2.5, includeLetter = true } 
       },
     ],
   });
-  return Packer.toBlob(doc);
+  return linkFontTable(await Packer.toBlob(doc));
+}
+
+// docx@9.0.2 writes word/fontTable.xml without a relationship to it; Word can flag that as damage.
+async function linkFontTable(blob) {
+  const zip = await JSZip.loadAsync(blob);
+  const relPath = 'word/_rels/document.xml.rels';
+  let rels = await zip.file(relPath).async('string');
+  if (zip.file('word/fontTable.xml') && !rels.includes('fontTable.xml')) {
+    rels = rels.replace(
+      '</Relationships>',
+      '<Relationship Id="rIdFontTable" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable" Target="fontTable.xml"/></Relationships>'
+    );
+    zip.file(relPath, rels);
+  }
+  return zip.generateAsync({
+    type: 'blob',
+    compression: 'DEFLATE',
+    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  });
 }
 
 // ---- saving files: browser download, or the claude.ai viewer's download capability ----
