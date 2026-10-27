@@ -1,0 +1,166 @@
+/* ---------- A4 letterhead (rendered at true size: 210mm x 297mm) ---------- */
+.lh {
+  width: 210mm;
+  height: 297mm;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #ffffff;
+  color: #1f2937;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.lh *, .lh *::before, .lh *::after { box-sizing: border-box; }
+.lh > * { position: relative; z-index: 1; }
+
+.lh-watermark {
+  position: absolute !important;
+  z-index: 0 !important;
+  left: 50%;
+  top: 52%;
+  width: 92mm;
+  transform: translate(-50%, -50%);
+  opacity: 0.05;
+  pointer-events: none;
+}
+.lh-watermark img { width: 100%; height: auto; display: block; }
+
+/* header */
+.lh-header { flex: 0 0 auto; }
+.lh-header-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8mm;
+}
+.lh-brand { display: flex; align-items: center; gap: 4.5mm; min-width: 0; flex: 1 1 auto; }
+.lh-logo { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; }
+.lh-logo img { display: block; width: auto; }
+.lh-id { min-width: 0; }
+.lh-name {
+  font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+  font-weight: 700;
+  color: var(--p);
+  line-height: 1.12;
+  letter-spacing: 0.15px;
+  overflow-wrap: anywhere;
+}
+.lh-tagline {
+  margin-top: 5px;
+  font-size: 9.6px;
+  font-weight: 600;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--s);
+  line-height: 1.45;
+}
+.lh-reg-top { margin-top: 4px; font-size: 9px; color: #6b7280; letter-spacing: 0.4px; }
+.lh-contacts {
+  flex: 0 0 auto;
+  max-width: 45%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-size: 10.4px;
+  line-height: 1.35;
+  color: #374151;
+  text-align: right;
+}
+.lh-ci { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; }
+.lh-ci-icon { flex: 0 0 auto; }
+.lh-ci-text { overflow-wrap: anywhere; }
+
+.lh--center .lh-header-inner { flex-direction: column; text-align: center; gap: 4mm; }
+.lh--center .lh-brand { flex-direction: column; gap: 3mm; flex: 0 0 auto; max-width: 100%; }
+.lh--center .lh-contacts {
+  max-width: 100%;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: 16px;
+  row-gap: 3px;
+  text-align: center;
+}
+
+/* body (writing area) */
+.lh-body { flex: 1 1 auto; min-height: 0; overflow: hidden; padding: 10mm 18mm 6mm; }
+.lh-letter { font-size: 12.5px; line-height: 1.62; color: #1f2937; }
+.lh-letter-meta { display: flex; justify-content: space-between; gap: 8mm; margin-bottom: 7mm; font-size: 11.5px; color: #374151; }
+.lh-letter-subject { font-weight: 600; margin-bottom: 5mm; color: #111827; }
+.lh-letter-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.lh-letter-sign { margin-top: 8mm; }
+.lh-sign-space { height: 12mm; }
+.lh-sign-name { font-weight: 600; color: #111827; }
+
+/* footer */
+.lh-footer { flex: 0 0 auto; }
+.lh-footer-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+  font-size: 9px;
+  line-height: 1.45;
+  color: #4b5563;
+}
+.lh-fline { display: flex; flex-wrap: wrap; justify-content: center; column-gap: 14px; row-gap: 2px; max-width: 100%; }
+.lh-meta { color: #6b7280; }
+.lh-ftext { font-style: italic; color: var(--p); font-weight: 500; }
+
+/* ---------- Design 1: Clinical Classic ---------- */
+.lh--classic .lh-header { padding: 13mm 16mm 0; }
+.lh-divider { flex: 0 0 auto; display: flex; align-items: center; }
+.lh--classic .lh-divider { margin: 6mm 16mm 0; gap: 0; }
+.lh--classic .lh-divider-accent { width: 28mm; height: 3px; background: var(--s); border-radius: 2px; }
+.lh--classic .lh-divider-line { flex: 1 1 auto; height: 1px; background: var(--p); opacity: 0.85; }
+.lh--classic .lh-divider-line2 { display: none; }
+.lh--classic .lh-pulse { flex: 0 0 auto; }
+.lh--classic.lh--center .lh-divider-accent { display: none; }
+.lh--classic.lh--center .lh-divider-line2 { display: block; }
+.lh--classic .lh-footer-rule { margin: 0 16mm; height: 1px; background: #d7dde5; }
+.lh--classic .lh-footer-inner { padding: 3.5mm 16mm 4.5mm; }
+.lh-footer-bar { display: flex; height: 5px; }
+.lh-footer-bar span:first-child { width: 32%; }
+.lh-footer-bar span:last-child { flex: 1 1 auto; }
+
+/* ---------- Design 2: Executive Band ---------- */
+.lh--band .lh-header { background: var(--p); overflow: hidden; }
+.lh--band .lh-header-inner { padding: 10mm 16mm 9mm; }
+.lh-band-texture { position: absolute !important; inset: 0; z-index: 0 !important; }
+.lh--band .lh-header-inner { z-index: 1; }
+.lh-band-stripe { height: 4px; background: var(--s); position: relative; z-index: 1; }
+.lh--band .lh-logo { background: #ffffff; border-radius: 12px; padding: 6px; }
+.lh--band .lh-name { color: #ffffff; }
+.lh--band .lh-tagline { color: var(--s); filter: none; }
+.lh--band .lh-contacts { color: rgba(255, 255, 255, 0.9); }
+.lh--band .lh-body { padding-top: 12mm; }
+.lh--band .lh-footer { background: var(--p); border-top: 3px solid var(--s); }
+.lh--band .lh-footer-inner { padding: 4.5mm 16mm 6mm; color: rgba(255, 255, 255, 0.86); }
+.lh--band .lh-meta { color: rgba(255, 255, 255, 0.7); }
+.lh--band .lh-ftext { color: #ffffff; }
+
+/* ---------- Design 3: Elegant Minimal ---------- */
+.lh--elegant .lh-header { padding: 15mm 18mm 0; }
+.lh--elegant .lh-name {
+  font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  line-height: 1.05;
+}
+.lh--elegant .lh-tagline { font-weight: 500; letter-spacing: 2.2px; font-size: 9px; margin-top: 6px; }
+.lh--elegant .lh-contacts { color: #4b5563; font-size: 9.8px; }
+.lh--elegant .lh-divider { margin: 6.5mm 18mm 0; gap: 7px; }
+.lh--elegant .lh-hair { flex: 1 1 auto; height: 1px; background: var(--p); opacity: 0.45; }
+.lh--elegant .lh-hair-dot { width: 6px; height: 6px; background: var(--s); transform: rotate(45deg); flex: 0 0 auto; }
+.lh--elegant.lh--left .lh-hair-a { flex: 0 0 22mm; opacity: 0.9; background: var(--s); height: 1.5px; }
+.lh--elegant .lh-body { padding: 11mm 20mm 6mm; }
+.lh--elegant .lh-footer-rule { margin: 0 18mm; height: 1px; background: var(--p); opacity: 0.3; }
+.lh--elegant .lh-footer-inner { padding: 4mm 18mm 9mm; letter-spacing: 0.25px; }
+.lh--elegant .lh-ftext { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 11.5px; font-weight: 600; }
+.lh-nowrap .lh-ci-text { white-space: nowrap; }
+.lh-ci .lh-ci-icon + .lh-ci-icon { margin-left: -3px; }
