@@ -91,6 +91,57 @@ function RibbonStrip({ p, m, s, bottom, gid }) {
   );
 }
 
+// Medical Wave design pieces (inspired by the EMC flyer). Drawn in mm units and stretched to the box.
+function WaveBand({ p, s, gid }) {
+  return (
+    <svg className="lh-wave-svg" width="100%" height="100%" viewBox="0 0 210 50" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor={p} />
+          <stop offset="1" stopColor={s} />
+        </linearGradient>
+      </defs>
+      <path d="M0,0 H210 V38 C185,37 160,43 120,47 C90,50 60,49 30,44 C18,42 8,40 0,39.5 Z" fill={s} opacity="0.35" />
+      <path d="M0,0 H210 V34 C185,33 160,39 120,43 C90,46 60,45 30,40 C18,38 8,36 0,35.5 Z" fill={`url(#${gid})`} />
+    </svg>
+  );
+}
+
+function WaveFooter({ p, s, gid }) {
+  return (
+    <svg className="lh-wave-svg" width="100%" height="100%" viewBox="0 0 210 30" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id={gid} x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0" stopColor={p} />
+          <stop offset="1" stopColor={s} />
+        </linearGradient>
+      </defs>
+      <path d="M0,10 C40,12 80,9 120,6 C160,3 185,0 210,0 V30 H0 Z" fill={s} opacity="0.35" />
+      <path d="M0,13 C40,15 80,12 120,9 C160,6 185,3 210,3 V30 H0 Z" fill={`url(#${gid})`} />
+    </svg>
+  );
+}
+
+function Chevrons({ color }) {
+  return (
+    <svg width="26mm" height="6mm" viewBox="0 0 52 12" fill="none" aria-hidden="true">
+      {[0, 11, 22, 33].map((x) => (
+        <path key={x} d={`M${x + 2},1 L${x + 8},6 L${x + 2},11 M${x + 6},1 L${x + 12},6 L${x + 6},11`} stroke={color} strokeWidth="0.9" strokeLinejoin="round" />
+      ))}
+    </svg>
+  );
+}
+
+function DotGrid({ color }) {
+  const dots = [];
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 2; c++) dots.push(<circle key={`${r}-${c}`} cx={1 + c * 4} cy={1 + r * 4} r="0.55" fill={color} />);
+  return (
+    <svg width="6mm" height="22mm" viewBox="0 0 6 22" aria-hidden="true">
+      {dots}
+    </svg>
+  );
+}
+
 function RibbonDivider({ m, s, centered, gid }) {
   const accent = centered ? '70,0 104,0 103.2,1.2 70.8,1.2' : '0,0 34,0 33.2,1.2 0,1.2';
   return (
@@ -127,9 +178,10 @@ const Letterhead = forwardRef(function Letterhead({ data, logoSrc, blank = false
   const s = b.secondary;
   const design = lay.design;
   const centered = lay.align === 'center';
-  const iconColor = s;
   const m = mix(p, s, 0.45);
   const ribbon = design === 'ribbon';
+  const wave = design === 'wave';
+  const iconColor = wave ? '#ffffff' : s;
   const ids = show.customDetails ? (x.customDetails || []).filter((d) => clean(d.value)) : [];
 
   const contacts = [];
@@ -162,7 +214,7 @@ const Letterhead = forwardRef(function Letterhead({ data, logoSrc, blank = false
   const footerText = show.footerText ? clean(x.footerText) : '';
   const addInfo = show.additionalInfo ? clean(x.additionalInfo) : '';
 
-  const baseName = design === 'elegant' ? 31 : design === 'band' ? 24 : 25;
+  const baseName = design === 'elegant' ? 31 : design === 'wave' ? 23 : design === 'band' ? 24 : 25;
   const nSize = nameSize(a.name, baseName);
   const logoSize = lay.logoSize;
 
@@ -255,6 +307,11 @@ const Letterhead = forwardRef(function Letterhead({ data, logoSrc, blank = false
       )}
 
       <header className="lh-header" data-part="header">
+        {wave && (
+          <div className="lh-wave-bg">
+            <WaveBand p={p} s={s} gid={`${idPrefix}-wt`} />
+          </div>
+        )}
         {ribbon && (
           <div className="lh-ribbon-top">
             <RibbonStrip p={p} m={m} s={s} gid={`${idPrefix}-rt`} />
@@ -287,6 +344,14 @@ const Letterhead = forwardRef(function Letterhead({ data, logoSrc, blank = false
           <span className="lh-divider-line" />
           <Pulse color={s} width={96} />
           <span className="lh-divider-line lh-divider-line2" />
+        </div>
+      )}
+      {wave && (
+        <div className="lh-divider" data-part="divider">
+          <span className="lh-wave-dots">
+            <DotGrid color={p} />
+          </span>
+          <Chevrons color={s} />
         </div>
       )}
       {ribbon && (
@@ -327,7 +392,12 @@ const Letterhead = forwardRef(function Letterhead({ data, logoSrc, blank = false
 
       {lay.showFooter && (
         <footer className="lh-footer" data-part="footer">
-          {design !== 'band' && <div className="lh-footer-rule" />}
+          {wave && (
+            <div className="lh-wave-bg">
+              <WaveFooter p={p} s={s} gid={`${idPrefix}-wf`} />
+            </div>
+          )}
+          {design !== 'band' && !wave && <div className="lh-footer-rule" />}
           <div className="lh-footer-inner">
             {footerLines.length === 0 ? (
               <span className="lh-ftext">{clean(a.name)}</span>

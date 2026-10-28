@@ -228,6 +228,12 @@ button, input, textarea { font: inherit; color: inherit; }
   linear-gradient(var(--p), var(--p)) 12% 70% / 26% 26% no-repeat,
   linear-gradient(#c9d1dc, #c9d1dc) 88% 58% / 22% 9% no-repeat,
   linear-gradient(#c9d1dc, #c9d1dc) 88% 82% / 18% 9% no-repeat; }
+.mini--wave .mini-head { margin: 0; height: 24%; border-radius: 0 0 40% 60% / 0 0 30% 22%; background:
+  linear-gradient(#fff, #fff) 12% 42% / 22% 26% no-repeat,
+  linear-gradient(#ffffffcc, #ffffffcc) 62% 38% / 34% 10% no-repeat,
+  linear-gradient(135deg, var(--p), var(--s)); }
+.mini--wave .mini-rule { height: 3px; margin: 3% 8% 0 auto; width: 22%; background: repeating-linear-gradient(90deg, var(--s) 0 2px, transparent 2px 5px); }
+.mini--wave .mini-foot { height: 9%; border-radius: 60% 0 0 0 / 40% 0 0 0; background: linear-gradient(45deg, var(--p), var(--s)); }
 .mini--ribbon .mini-rule { height: 2px; background: linear-gradient(90deg, var(--s) 0 20%, #d5dde8 20%); }
 .mini--ribbon .mini-foot { height: 4%; background: linear-gradient(115deg, var(--s) 0 20%, #fff 20% 21.5%, color-mix(in srgb, var(--p) 55%, var(--s)) 21.5% 40%, #fff 40% 41.5%, var(--p) 41.5%); }
 

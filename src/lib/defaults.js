@@ -18,6 +18,7 @@ export const DESIGNS = [
   { id: 'band', name: 'Executive Band', note: 'Solid colour header and footer bands' },
   { id: 'elegant', name: 'Elegant Minimal', note: 'Serif name, fine hairlines' },
   { id: 'ribbon', name: 'Corporate Ribbon', note: 'Slanted colour ribbons, icon chips' },
+  { id: 'wave', name: 'Medical Wave', note: 'Cyan wave header and footer, like the EMC flyer' },
 ];
 
 export const LOGO_STYLES = [

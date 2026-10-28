@@ -1,41 +1,49 @@
-// Brand profile: Expert Medical Coding Academy (the default build).
+// Brand profile: Experts Medical Coding Academy (the default build).
+// Details are taken from the academy's introductory-session flyer.
+import emcLogo from './assets/emc-logo.png';
+
 export default {
   id: 'emca',
   appTitle: 'EMCA Letterhead Studio',
   orgWord: 'Academy',
-  storageKey: 'emca-letterhead-v1',
+  // v2: new defaults from the flyer, so older saved settings don't hide them
+  storageKey: 'emca-letterhead-v2',
   allowGeneratedLogo: true,
-  presets: [],
+  presets: [{ id: 'emc-cyan', name: 'EMC Cyan', primary: '#0E4F7A', secondary: '#06BFDE' }],
   placeholders: {
-    city: 'Chennai',
-    state: 'Tamil Nadu',
-    pin: '600001',
-    name: 'Expert Medical Coding Academy',
-    tagline: 'e.g. Excellence in Medical Coding Training',
+    city: 'Chamarajanagara',
+    state: 'Karnataka',
+    pin: '6-digit PIN',
+    tagline: 'e.g. Medical Coding Training & Career Programs',
     refNo: 'EMCA/2026/014',
     subject: 'e.g. Internship Completion Certificate',
-    signName: 'Dr. A. Kumar',
-    signTitle: 'Director',
+    signName: 'Signatory name',
+    signTitle: 'e.g. Director',
     fileName: 'EMCA-Letterhead',
   },
-  overrides: {},
-  sample: {
+  overrides: {
     academy: {
-      address: '2nd Floor, Lakshmi Towers, 45/2 Anna Salai, Near Gemini Flyover, Teynampet',
-      city: 'Chennai',
-      state: 'Tamil Nadu',
-      pin: '600018',
-      phone: '+91 98765 43210',
-      whatsapp: '+91 98765 43210',
-      email: 'info@expertmedicalcoding.in',
-      website: 'www.expertmedicalcoding.in',
-      regNo: 'TN/EDU/2024/01873',
+      name: 'Experts Medical Coding Academy',
+      tagline: 'Medical Coding Training & Career Programs',
+      address: 'BR Hills Road, Opp. JSS College, Above Ola Showroom',
+      city: 'Chamarajanagara',
+      state: 'Karnataka',
+      pin: '',
+      phone: '+91 86600 77213',
+      whatsapp: '',
+      email: 'expertsmedicalcoding@gmail.com',
+      website: '',
+      regNo: '',
     },
-    extra: {
-      linkedin: 'linkedin.com/company/expert-medical-coding-academy',
-      instagram: 'instagram.com/expertmedicalcoding',
-      accreditation: 'Training aligned with AAPC CPC® & AHIMA CCS® certification standards',
-      footerText: 'Shaping certified medical coders since 2015',
+    branding: {
+      logoMode: 'upload',
+      uploadedLogo: emcLogo,
+      primary: '#0E4F7A',
+      secondary: '#06BFDE',
+      presetId: 'emc-cyan',
     },
+    layout: { design: 'wave', logoSize: 62 },
+    exportOpts: { fileName: 'EMCA-Letterhead' },
   },
+  sample: null,
 };

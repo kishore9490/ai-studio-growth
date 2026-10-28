@@ -201,3 +201,28 @@
 .lh--ribbon .lh-footer-rule { margin: 0 18mm; height: 1px; background: #c8d5ea; }
 .lh--ribbon .lh-footer-inner { padding: 3.5mm 18mm 4mm; font-size: 9.6px; color: #4b5563; }
 .lh-fname { font-weight: 700; color: var(--p); }
+
+/* ---------- Design 5: Medical Wave (EMC flyer style) ---------- */
+.lh--wave .lh-header { position: relative; padding: 0; }
+.lh-wave-bg { position: absolute !important; inset: 0; z-index: 0 !important; line-height: 0; }
+.lh-wave-svg { display: block; }
+.lh--wave .lh-header-inner { z-index: 1; padding: 9mm 16mm 17mm; }
+.lh--wave .lh-logo { background: #ffffff; border-radius: 10px; padding: 2.2mm 3mm; }
+.lh--wave .lh-name {
+  font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  color: #ffffff; text-transform: uppercase; letter-spacing: 0.8px; line-height: 1.02;
+}
+.lh--wave .lh-tagline { color: rgba(255, 255, 255, 0.92); font-weight: 500; letter-spacing: 1.4px; }
+.lh--wave .lh-contacts { color: #ffffff; font-size: 10.8px; gap: 5px; }
+.lh--wave .lh-header .lh-ids { color: rgba(255, 255, 255, 0.9); }
+.lh--wave .lh-header .lh-id-label { color: #ffffff; }
+.lh--wave .lh-header .lh-id-sep { color: rgba(255, 255, 255, 0.5); }
+.lh--wave .lh-divider { position: relative; margin: -3mm 14mm 0 16mm; height: 6mm; justify-content: flex-end; }
+.lh-wave-dots { position: absolute; left: -12mm; top: 4mm; opacity: 0.55; line-height: 0; }
+.lh--wave .lh-body { padding: 6mm 18mm 6mm; }
+.lh--wave .lh-footer { position: relative; }
+.lh--wave .lh-footer-inner { position: relative; z-index: 1; padding: 11mm 18mm 5mm; color: #ffffff; font-size: 9.8px; }
+.lh--wave .lh-footer .lh-meta, .lh--wave .lh-footer .lh-ids { color: rgba(255, 255, 255, 0.86); }
+.lh--wave .lh-footer .lh-id-label, .lh--wave .lh-ftext { color: #ffffff; }
+.lh--wave .lh-footer .lh-id-sep { color: rgba(255, 255, 255, 0.5); }
+.lh--wave .lh-fname { color: #ffffff; }

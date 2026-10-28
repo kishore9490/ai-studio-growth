@@ -4,7 +4,7 @@ Two ready-to-use letterhead tools are built from the same code:
 
 | File | For | Opens with |
 |---|---|---|
-| `EMCA-Letterhead-Studio.html` | Expert Medical Coding Academy | Academy name, Navy & Teal, Clinical Classic design |
+| `EMCA-Letterhead-Studio.html` | Experts Medical Coding Academy | EMC logo, Chamarajanagara address, phone and email, EMC Cyan, Medical Wave design |
 | `JCH-Letterhead-Studio.html` | JCH Business Solutions LLP | JCH logo, address, email, phone, LLPIN and GSTIN, JCH Blue, Corporate Ribbon design |
 
 Both work the same way and have the same features. Each one keeps its own saved details in the browser.
@@ -29,7 +29,7 @@ It works offline. Nothing is installed and nothing is sent anywhere. Your detail
 - **Academy details:** name (the only required field), tagline, address, city, state, PIN, phone, WhatsApp, email (validated), website, registration number.
 - **Logo:** upload your own (PNG, JPG, SVG or WEBP). Empty white or transparent space around the artwork is trimmed automatically. If you have no logo, create one from four medical-coding styles (Code + Cross, Pulse Cross, Shield, Monogram). You can replace or remove the logo and adjust its size.
 - **Colours:** six presets (Navy & Teal is the default, plus EMC Logo Blue to match the EMC logo), or any custom primary and secondary colour.
-- **Four designs:** Clinical Classic, Executive Band, Elegant Minimal and Corporate Ribbon. Each has a left-aligned or centered header.
+- **Five designs:** Clinical Classic, Executive Band, Elegant Minimal, Corporate Ribbon and Medical Wave. Each has a left-aligned or centered header.
 - **Show or hide** each contact detail, the academy name beside the logo, the tagline, the footer and a faint logo watermark. You can also put the phone, email and website in the header or the footer.
 - **More details:** add any label and value, such as GSTIN, LLPIN, CIN, PAN or Udyam No. (up to 8). They show under the contact details, or in the footer.
 - **Additional info:** social links, accreditation, footer text and any extra line.
