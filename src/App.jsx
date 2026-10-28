@@ -294,7 +294,19 @@ export default function App() {
             </Section>
 
             <Section icon={ListPlus} title="More details" hint="GSTIN, LLPIN, CIN or anything else" defaultOpen={(x.customDetails || []).length > 0}>
-              <p className="sec-note">Add any other detail as a label and value, for example GSTIN 29AALFJ2957J1ZR. They appear under the contact details, or in the footer if contacts are placed there.</p>
+              <p className="sec-note">Add any other detail as a label and value, for example GSTIN 29AALFJ2957J1ZR or CIN U86100KA2026PTC223554.</p>
+              <div className="field">
+                <span className="label-plain">Show these details in</span>
+                <Segmented
+                  label="Where more details appear"
+                  value={lay.detailsPlacement}
+                  onChange={(v) => set('layout', 'detailsPlacement', v)}
+                  options={[
+                    { value: 'header', label: 'Header' },
+                    { value: 'footer', label: 'Footer' },
+                  ]}
+                />
+              </div>
               {(x.customDetails || []).map((d, i) => (
                 <div className="detail-row" key={i}>
                   <input

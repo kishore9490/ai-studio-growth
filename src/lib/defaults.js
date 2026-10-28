@@ -79,6 +79,7 @@ const BASE_STATE = {
     showFooter: true,
     showWatermark: false,
     contactPlacement: 'header', // 'header' | 'footer'
+    detailsPlacement: 'header', // where More details (GSTIN, CIN, ...) appear
   },
   show: {
     phone: true,

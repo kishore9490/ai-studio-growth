@@ -13,6 +13,7 @@ Made with `EMCA-Letterhead-Studio.html` (repository root), using the details fro
 - Phone: +91 86600 77213
 - Email: expertsmedicalcoding@gmail.com
 - Address: BR Hills Road, Opp. JSS College, Above Ola Showroom, Chamarajanagara, Karnataka
+- CIN: U86100KA2026PTC223554 (footer)
 
 To change anything (PIN code, website, Facebook or Instagram links, a different design), open `EMCA-Letterhead-Studio.html`, edit the form, and download again.
 

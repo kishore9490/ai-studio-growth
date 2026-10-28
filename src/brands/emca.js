@@ -6,8 +6,8 @@ export default {
   id: 'emca',
   appTitle: 'EMCA Letterhead Studio',
   orgWord: 'Academy',
-  // v2: new defaults from the flyer, so older saved settings don't hide them
-  storageKey: 'emca-letterhead-v2',
+  // bumped when the defaults change, so older saved settings don't hide them (v3: CIN added)
+  storageKey: 'emca-letterhead-v3',
   allowGeneratedLogo: true,
   presets: [{ id: 'emc-cyan', name: 'EMC Cyan', primary: '#0E4F7A', secondary: '#06BFDE' }],
   placeholders: {
@@ -42,7 +42,10 @@ export default {
       secondary: '#06BFDE',
       presetId: 'emc-cyan',
     },
-    layout: { design: 'wave', logoSize: 62 },
+    extra: {
+      customDetails: [{ label: 'CIN', value: 'U86100KA2026PTC223554' }],
+    },
+    layout: { design: 'wave', logoSize: 62, detailsPlacement: 'footer' },
     exportOpts: { fileName: 'EMCA-Letterhead' },
   },
   sample: null,

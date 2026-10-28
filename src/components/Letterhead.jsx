@@ -236,8 +236,9 @@ const Letterhead = forwardRef(function Letterhead({ data, logoSrc, blank = false
     </div>
   );
 
-  const headerIds = contactsInHeader ? ids : [];
-  const footerIds = contactsInHeader ? [] : ids;
+  const idsInHeader = lay.detailsPlacement !== 'footer';
+  const headerIds = idsInHeader ? ids : [];
+  const footerIds = idsInHeader ? [] : ids;
 
   const contactBlock =
     headerContacts.length > 0 || headerIds.length > 0 ? (
