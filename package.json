@@ -1,0 +1,53 @@
+{
+  "name": "bhagavan-bc-website",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bilingual (English/Kannada) personal website for Dr. Bhagavan B.C. \u2014 pending content approval.",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "content:check": "vitest run tests/unit/content.test.ts",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "content:gate": "CONTENT_GATE=1 vitest run tests/content/publication-gate.test.ts"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.64.0",
+    "motion": "^14.7.1",
+    "next": "^16.4.3",
+    "next-intl": "^4.14.9",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.63.0",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.4.3",
+    "jsdom": "^29.1.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
+  },
+  "overrides": {
+    "playwright-core": "1.63.0"
+  }
+}

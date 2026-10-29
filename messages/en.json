@@ -1,0 +1,248 @@
+{
+  "meta": {
+    "siteName": "Dr. Bhagavan B.C.",
+    "defaultDescription": "Personal website of Dr. Bhagavan B.C., Vice Chancellor of Rajiv Gandhi University of Health Sciences, Karnataka — surgeon, teacher and academic leader.",
+    "ogAlt": "Dr. Bhagavan B.C. — Vice Chancellor, Rajiv Gandhi University of Health Sciences, Karnataka",
+    "pages": {
+      "home": {
+        "title": "Dr. Bhagavan B.C. — Vice Chancellor, RGUHS",
+        "description": "Surgeon, medical educator and Vice Chancellor of Rajiv Gandhi University of Health Sciences, Karnataka."
+      },
+      "about": {
+        "title": "About",
+        "description": "Biography of Dr. Bhagavan B.C.: surgical practice, medical education and institutional leadership, based on the official university profile."
+      },
+      "education": {
+        "title": "Education & Qualifications",
+        "description": "Qualifications of Dr. Bhagavan B.C.: MBBS, M.S. (General Surgery), FMAS, FRCS (Edinburgh) and FRCS (Glasgow)."
+      },
+      "experience": {
+        "title": "Professional Experience",
+        "description": "Professional chronology of Dr. Bhagavan B.C. at Kempegowda Institute of Medical Sciences and Rajiv Gandhi University of Health Sciences."
+      },
+      "vision": {
+        "title": "Leadership Vision",
+        "description": "Seven priorities for health sciences education stated in the official Vice Chancellor profile of RGUHS."
+      },
+      "publications": {
+        "title": "Publications & Academic Contributions",
+        "description": "Verified publications and academic contributions of Dr. Bhagavan B.C."
+      },
+      "media": {
+        "title": "Media & Gallery",
+        "description": "Approved photographs and media from academic and university engagements."
+      },
+      "contact": {
+        "title": "Contact",
+        "description": "How to reach the Office of the Vice Chancellor through official Rajiv Gandhi University of Health Sciences channels."
+      }
+    }
+  },
+  "nav": {
+    "primary": "Primary",
+    "home": "Home",
+    "about": "About",
+    "education": "Education",
+    "experience": "Experience",
+    "vision": "Vision",
+    "publications": "Publications",
+    "media": "Media",
+    "contact": "Contact",
+    "journeyGroup": "Journey",
+    "archiveGroup": "Archive",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "menuTitle": "Menu",
+    "skipToContent": "Skip to content",
+    "currentPage": "current page"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "kn": "ಕನ್ನಡ",
+    "switchTo": "Read this page in {language}"
+  },
+  "common": {
+    "source": "Source",
+    "officialProfile": "Official RGUHS Vice Chancellor profile",
+    "vcMessage": "Vice Chancellor's message on the RGUHS website",
+    "university": "Rajiv Gandhi University of Health Sciences website",
+    "opensNewTab": "opens in a new tab",
+    "learnMore": "Learn more",
+    "statedPriority": "Stated priority",
+    "sourceNote": "Information on this page is reproduced from the official profile published by Rajiv Gandhi University of Health Sciences.",
+    "periodsNote": "Periods are shown as published. Open-ended appointments appear as “from” a year until their current status is confirmed."
+  },
+  "home": {
+    "hero": {
+      "headlineA": "Advancing Medical Education.",
+      "headlineB": "Inspiring the Future of Healthcare.",
+      "supporting": "A journey across surgical practice, medical education and academic leadership, guided by a commitment to learning, innovation and service.",
+      "ctaJourney": "Explore My Journey",
+      "ctaVision": "Leadership Vision",
+      "scroll": "Scroll to continue",
+      "qualifications": "Qualifications"
+    },
+    "intro": {
+      "eyebrow": "Introduction",
+      "title": "Surgeon, teacher and academic leader.",
+      "body": "Dr. Bhagavan B.C. is the Vice Chancellor of Rajiv Gandhi University of Health Sciences, Karnataka. Trained in general surgery and minimal access surgery, he spent two decades on the surgical faculty of Kempegowda Institute of Medical Sciences, Bengaluru, where he went on to serve as Vice Principal and Principal.",
+      "cta": "Read the full biography"
+    },
+    "journey": {
+      "eyebrow": "Professional journey",
+      "title": "From the operating theatre to the university.",
+      "body": "Milestones in education and career, as recorded in the official university profile.",
+      "cta": "View full experience",
+      "education": "Education",
+      "career": "Career",
+      "current": "Current"
+    },
+    "focus": {
+      "eyebrow": "Areas of focus",
+      "title": "Professional themes",
+      "body": "Themes identified in the official profile. They describe fields of work and interest, not a list of completed projects."
+    },
+    "visionPreview": {
+      "eyebrow": "Leadership vision",
+      "title": "Seven priorities for health sciences education.",
+      "body": "The official profile sets out priorities for the university's future. They are presented here as stated priorities, distinct from initiatives that have been implemented.",
+      "cta": "Explore the vision"
+    },
+    "closing": {
+      "eyebrow": "Looking ahead",
+      "statement": "Knowledge in medicine grows when it is taught, shared and carried into the service of others.",
+      "body": "Health sciences education shapes the doctors, nurses and practitioners who will care for the next generation. Its future depends on rigour in learning, openness to new knowledge and a lasting commitment to the communities it serves.",
+      "cta": "Read the leadership vision"
+    }
+  },
+  "about": {
+    "eyebrow": "About",
+    "title": "A life in surgery, teaching and academic leadership.",
+    "lead": "An editorial biography drawn from the official profile published by Rajiv Gandhi University of Health Sciences.",
+    "contents": "On this page",
+    "officialProfileCta": "Open the official profile"
+  },
+  "education": {
+    "eyebrow": "Education & Qualifications",
+    "title": "Qualifications",
+    "lead": "Degrees and fellowships as listed in the official university profile.",
+    "awarded": "Year",
+    "period": "Period",
+    "institutionNotStated": "Awarding institution not stated in the source"
+  },
+  "experience": {
+    "eyebrow": "Professional Experience",
+    "title": "A professional chronology.",
+    "lead": "Roles and appointments as published in the official university profile. Some appointments overlap; they are reproduced as listed.",
+    "chartTitle": "Appointments over time",
+    "chartCaption": "Each bar shows a published period. Bars that fade out are open-ended appointments.",
+    "from": "From {year}",
+    "range": "{start}–{end}",
+    "current": "Current",
+    "currentRole": "Current role",
+    "listTitle": "Appointments",
+    "toPresent": "{year}–present"
+  },
+  "vision": {
+    "eyebrow": "Leadership Vision",
+    "title": "The future of health sciences education.",
+    "lead": "Seven priorities articulated in the official Vice Chancellor profile of Rajiv Gandhi University of Health Sciences.",
+    "diagramCenter": "Future of Health Sciences Education",
+    "diagramLabel": "Seven stated priorities",
+    "noticeTitle": "About these priorities",
+    "notice": "These are priorities stated in the official profile. This page does not report on their implementation, and does not describe partnerships, budgets or results. For official updates, please refer to the university.",
+    "context": "Context",
+    "officialTitle": "Official sources",
+    "officialBody": "Read the Vice Chancellor's message and the university's own announcements on the official RGUHS website."
+  },
+  "publications": {
+    "eyebrow": "Publications & Academic Contributions",
+    "title": "Publications",
+    "lead": "Books, papers, lectures and other academic contributions, listed only when each record can be independently verified.",
+    "emptyTitle": "Academic publications and contributions are being compiled for this section.",
+    "emptyBody": "Each entry will be added with its full bibliographic details and a DOI, ISBN or official source link.",
+    "willInclude": "This section will include",
+    "types": {
+      "book": "Books",
+      "book-chapter": "Book chapters",
+      "research-paper": "Research papers",
+      "conference": "Conference contributions",
+      "lecture": "Academic lectures",
+      "editorial": "Editorial contributions",
+      "public-talk": "Public talks"
+    },
+    "filterType": "Type",
+    "filterYear": "Year",
+    "all": "All",
+    "results": "{count, plural, =0 {No records match} one {# record} other {# records}}",
+    "doi": "DOI",
+    "isbn": "ISBN",
+    "sourceLink": "Source"
+  },
+  "media": {
+    "eyebrow": "Media & Gallery",
+    "title": "Media & Gallery",
+    "lead": "A visual archive of academic and university engagements, limited to approved and attributed materials.",
+    "emptyTitle": "Approved photographs and media will appear here.",
+    "emptyBody": "Images are published only with their source, date and usage permission confirmed.",
+    "willInclude": "Planned categories",
+    "categories": {
+      "academic-engagements": "Academic engagements",
+      "university-events": "Official university events",
+      "conferences-lectures": "Conferences and lectures",
+      "convocations": "Convocations",
+      "community-initiatives": "Community initiatives",
+      "interviews-coverage": "Interviews and published coverage"
+    },
+    "placeholderBanner": "Development preview: the tiles below are abstract placeholders, not photographs. They are hidden in production.",
+    "open": "Open image: {alt}",
+    "dialogLabel": "Image viewer",
+    "close": "Close image viewer",
+    "previous": "Previous image",
+    "next": "Next image",
+    "counter": "Image {current} of {total}",
+    "credit": "Credit"
+  },
+  "contact": {
+    "eyebrow": "Contact",
+    "title": "Getting in touch.",
+    "lead": "This personal website does not collect messages. For official correspondence, please use the channels published by Rajiv Gandhi University of Health Sciences.",
+    "officialTitle": "Official channels",
+    "universityTitle": "University website",
+    "universityBody": "Official contact details, notifications and announcements of Rajiv Gandhi University of Health Sciences, Karnataka.",
+    "vcDeskTitle": "Vice Chancellor's desk",
+    "vcDeskBody": "The Vice Chancellor's message on the official university website.",
+    "vcProfileTitle": "Official profile",
+    "vcProfileBody": "The Vice Chancellor's profile as published by the university.",
+    "privacyTitle": "Privacy",
+    "privacyBody": "This website does not use contact forms, analytics or tracking cookies, and does not collect personal information from visitors.",
+    "visit": "Visit"
+  },
+  "footer": {
+    "tagline": "Surgeon, medical educator and Vice Chancellor of Rajiv Gandhi University of Health Sciences, Karnataka.",
+    "explore": "Explore",
+    "official": "Official sources",
+    "disclaimerTitle": "About this website",
+    "disclaimer": "This is an independent personal website. It is not an official website of Rajiv Gandhi University of Health Sciences. Biographical information is drawn from the university's published profile.",
+    "copyright": "© {year} Dr. Bhagavan B.C.",
+    "backToTop": "Back to top"
+  },
+  "notFound": {
+    "eyebrow": "404",
+    "title": "This page could not be found.",
+    "body": "The page may have moved, or the address may be incorrect.",
+    "cta": "Return to the home page"
+  },
+  "error": {
+    "eyebrow": "Error",
+    "title": "Something went wrong.",
+    "body": "The page could not be displayed. Please try again.",
+    "retry": "Try again",
+    "home": "Return to the home page"
+  },
+  "portrait": {
+    "monogramLabel": "Monogram",
+    "pending": "Development note: official portrait awaiting approval"
+  }
+}
