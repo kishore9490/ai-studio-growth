@@ -65,6 +65,12 @@ export async function Footer({ locale }: { locale: Locale }) {
         </div>
       </div>
 
+      <div aria-hidden className="container-x overflow-hidden">
+        <p className="watermark -mb-[0.12em] text-center text-[clamp(2.5rem,8.4vw,8.25rem)] [-webkit-text-stroke:1px_rgb(201_173_120/0.22)]">
+          {profile.name}
+        </p>
+      </div>
+
       <div className="border-t border-line">
         <div className="container-x grid gap-6 py-8 text-sm text-mist md:grid-cols-[1fr_auto] md:items-end">
           <div className="max-w-3xl">

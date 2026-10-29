@@ -35,7 +35,7 @@ export default async function EducationPage({ params }: LocaleParams) {
                     <GraduationCap aria-hidden className="h-5 w-5" />
                   </span>
                 </div>
-                <article className="card card-interactive mt-0 flex flex-1 flex-col p-7 lg:mt-6">
+                <article className="card-soft mt-0 flex flex-1 flex-col p-7 lg:mt-6">
                   <p className="font-serif text-4xl leading-none text-ink">
                     {q.startYear ? (
                       <>

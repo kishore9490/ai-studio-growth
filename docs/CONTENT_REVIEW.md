@@ -24,7 +24,7 @@ automated part of this checklist is `npm run content:gate`, which currently **fa
 
 | Item | Status | Where it goes |
 | --- | --- | --- |
-| Official portrait + written usage permission | **Not supplied.** A typographic "BC" composition is shown instead. | `portraitRecord` in `src/content/records.ts` |
+| Official portrait + usage permission | **Supplied and approved by the client representative on 2026-10-29.** Used in the hero (background removed, no other retouching), About page, home page, social-share image and structured data. Keep the written approval on file. | `portraitRecord` in `src/content/records.ts`, `public/images/portrait/` |
 | Approval of the "BC" monogram as a personal design element | Proposed only | `src/components/layout/Monogram.tsx`, `src/app/icon.svg` |
 | Approved photographs/videos with source, date, credit and permission | **None supplied.** Media page shows an honest empty state. | `mediaRecords` in `records.ts`, files in `public/media/` |
 | Verified publications (DOI/ISBN/official URL) | **None supplied.** Publications page shows "being compiled". | `publicationRecords` in `records.ts` |
@@ -63,13 +63,13 @@ publication. None of it is attributed to Dr. Bhagavan B.C. and there are no quot
 - [ ] English copy approved by: ____________________
 
 ### Assets and permissions
-- [ ] Portrait supplied with written permission, or decision recorded to launch without one
+- [x] Portrait supplied and approved for use by the client representative (2026-10-29) — file the written approval
 - [ ] Every image has an identified source, credit and permission reference
 - [ ] Monogram approved (or replaced with an approved wordmark)
 - [ ] No RGUHS logo, seal or institutional branding is used
 
 ### Consent
-- [ ] Dr. Bhagavan B.C. (or an authorised representative) has approved the site's existence, content and tone
+- [ ] Dr. Bhagavan B.C. (or an authorised representative) has approved the site's existence, content and tone — the client representative stated approval on 2026-10-29; record who approved and keep it on file
 - [ ] Any contact channel shown has been explicitly approved for this website
 
 ### Configuration

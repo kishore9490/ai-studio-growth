@@ -99,6 +99,8 @@ export const portraitSchema = z
     src: z.string().min(1),
     width: z.number().int().positive(),
     height: z.number().int().positive(),
+    /** Same photograph with the background removed, for layered compositions. */
+    cutout: z.object({ src: z.string().min(1), width: z.number().int().positive(), height: z.number().int().positive() }),
     credit: z.string().min(1),
     permissionReference: z.string().min(1),
   })

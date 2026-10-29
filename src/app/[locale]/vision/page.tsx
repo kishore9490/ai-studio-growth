@@ -76,7 +76,7 @@ export default async function VisionPage({ params }: LocaleParams) {
                 index % 2 === 1 && 'md:order-1 md:col-span-4 md:col-start-1',
               )}
             >
-              <div className="surface-midnight relative aspect-square overflow-hidden rounded-[var(--radius-xl)] p-8 text-royal-soft shadow-lift">
+              <div className="surface-mesh relative aspect-square overflow-hidden rounded-[var(--radius-xl)] p-8 text-royal-soft shadow-lift">
                 <div aria-hidden className="bg-grid absolute inset-0" />
                 <VisionIllustration id={p.id} className="relative h-full w-full" />
               </div>

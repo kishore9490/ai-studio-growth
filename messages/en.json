@@ -81,7 +81,9 @@
       "ctaJourney": "Explore My Journey",
       "ctaVision": "Leadership Vision",
       "scroll": "Scroll to continue",
-      "qualifications": "Qualifications"
+      "qualifications": "Qualifications",
+      "badge": "Vice Chancellor · RGUHS, Karnataka",
+      "portraitCaption": "Vice Chancellor"
     },
     "intro": {
       "eyebrow": "Introduction",
@@ -96,7 +98,10 @@
       "cta": "View full experience",
       "education": "Education",
       "career": "Career",
-      "current": "Current"
+      "current": "Current",
+      "railLabel": "Milestones",
+      "previous": "Previous milestones",
+      "next": "Next milestones"
     },
     "focus": {
       "eyebrow": "Areas of focus",
@@ -113,7 +118,22 @@
       "eyebrow": "Looking ahead",
       "statement": "Knowledge in medicine grows when it is taught, shared and carried into the service of others.",
       "body": "Health sciences education shapes the doctors, nurses and practitioners who will care for the next generation. Its future depends on rigour in learning, openness to new knowledge and a lasting commitment to the communities it serves.",
-      "cta": "Read the leadership vision"
+      "cta": "Read the leadership vision",
+      "secondaryCta": "Read the biography"
+    },
+    "highlights": {
+      "eyebrow": "At a glance",
+      "title": "Surgery, teaching and academic leadership.",
+      "currentRole": "Current role",
+      "vcBody": "Leads Rajiv Gandhi University of Health Sciences, the state health sciences university of Karnataka.",
+      "qualifications": "Qualifications",
+      "qualificationsBody": "From MBBS to FRCS",
+      "fellowships": "FRCS fellowships",
+      "fellowshipsBody": "Edinburgh {edinburgh} · Glasgow {glasgow}",
+      "facultyBody": "Joined the surgical faculty of Kempegowda Institute of Medical Sciences, Bengaluru",
+      "priorities": "Stated priorities",
+      "prioritiesBody": "for the future of health sciences education",
+      "explore": "Explore the vision"
     }
   },
   "about": {

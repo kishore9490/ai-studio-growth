@@ -1,10 +1,11 @@
 import { ArrowUpRight } from 'lucide-react';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { Reveal } from '@/components/motion/Reveal';
 import { PageHero } from '@/components/ui/PageHero';
 import { SourceNote } from '@/components/ui/SourceNote';
-import { getCopy, getMilestones } from '@/content';
+import { getCopy, getMilestones, getPortrait } from '@/content';
 import { aboutSectionIds } from '@/content/ids';
 import { officialLinks } from '@/content/sources';
 import { personJsonLd, profilePageJsonLd, serializeJsonLd } from '@/lib/jsonld';
@@ -22,6 +23,8 @@ export default async function AboutPage({ params }: LocaleParams) {
   const journey = await getTranslations({ locale, namespace: 'home.journey' });
   const sections = getCopy(locale).about;
   const milestones = getMilestones(locale);
+  const portrait = getPortrait();
+  const profile = getCopy(locale).profile;
 
   return (
     <>
@@ -29,7 +32,29 @@ export default async function AboutPage({ params }: LocaleParams) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd([personJsonLd(locale), profilePageJsonLd(locale)]) }}
       />
-      <PageHero eyebrow={t('eyebrow')} title={t('title')} lead={t('lead')} />
+      <PageHero
+        eyebrow={t('eyebrow')}
+        title={t('title')}
+        lead={t('lead')}
+        aside={
+          portrait && (
+            <div className="enter-mask relative mx-auto w-full max-w-sm">
+              <div aria-hidden className="absolute -inset-10 rounded-full bg-[radial-gradient(closest-side,rgb(49_95_234/0.45),transparent)]" />
+              <div className="relative overflow-hidden rounded-[2rem] border border-white/15 shadow-glow">
+                <Image
+                  src={portrait.src}
+                  alt={profile.name}
+                  width={portrait.width}
+                  height={portrait.height}
+                  priority
+                  sizes="(min-width: 1024px) 24rem, 90vw"
+                  className="aspect-[4/4.6] w-full object-cover object-top"
+                />
+              </div>
+            </div>
+          )
+        }
+      />
 
       <div className="surface-ivory section">
         <div className="container-x grid gap-12 lg:grid-cols-[15rem_1fr] lg:gap-20">

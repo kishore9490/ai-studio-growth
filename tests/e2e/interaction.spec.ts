@@ -91,10 +91,31 @@ test('content is readable without JavaScript', async ({ browser }) => {
   await context.close();
 });
 
-test('header becomes solid after scrolling', async ({ page }) => {
+test('header pill becomes solid after scrolling', async ({ page }) => {
   await page.goto('/en');
-  const header = page.locator('header').first();
-  await expect(header).toHaveClass(/bg-transparent/);
+  const bar = page.locator('header > div').first();
+  await expect(bar).not.toHaveClass(/bg-midnight/);
   await page.mouse.wheel(0, 600);
-  await expect(header).toHaveClass(/bg-midnight/);
+  await expect(bar).toHaveClass(/bg-midnight/);
+});
+
+test('approved portrait is displayed with alternative text', async ({ page }) => {
+  await page.goto('/en');
+  const hero = page.locator('section[aria-labelledby="hero-title"]');
+  await expect(hero.getByRole('img', { name: 'Dr. Bhagavan B.C.' })).toBeVisible();
+  await page.goto('/kn/about');
+  await expect(page.getByRole('img', { name: 'ಡಾ. ಭಗವಾನ್ ಬಿ.ಸಿ.' }).first()).toBeVisible();
+});
+
+test('journey rail scrolls with its buttons', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await page.goto('/en');
+  const rail = page.getByRole('list', { name: 'Milestones' });
+  await rail.scrollIntoViewIfNeeded();
+  const previous = page.getByRole('button', { name: 'Previous milestones' });
+  const next = page.getByRole('button', { name: 'Next milestones' });
+  await expect(previous).toBeDisabled();
+  await next.click();
+  await expect.poll(() => rail.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+  await expect(previous).toBeEnabled();
 });

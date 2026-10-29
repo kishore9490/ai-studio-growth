@@ -3,10 +3,11 @@
 A bilingual (English / Kannada) personal website for Dr. Bhagavan B.C., Vice Chancellor of
 Rajiv Gandhi University of Health Sciences (RGUHS), Karnataka.
 
-> **Status: built and tested; content awaiting approval.** No content has been published.
-> Every biographical fact is marked *pending verification*, the Kannada text needs review by a
-> qualified Kannada reviewer, and no portrait, photographs, publications or contact details
-> have been supplied yet. See [`docs/CONTENT_REVIEW.md`](docs/CONTENT_REVIEW.md) before going live.
+> **Status: built and tested; approved by the client representative; not yet deployed.**
+> The official portrait has been supplied and approved. Biographical facts are still marked
+> *pending verification* against the live RGUHS profile, the Kannada text needs review by a
+> qualified Kannada reviewer, and no gallery photographs, publications or contact details have
+> been supplied. See [`docs/CONTENT_REVIEW.md`](docs/CONTENT_REVIEW.md) before going live.
 
 This is an independent personal website. It is not an official RGUHS property, uses no university
 logos or seals, and does not imply endorsement.
@@ -142,10 +143,11 @@ To add an approved photograph, place an optimised image in `public/media/`, add 
 with English and Kannada alt text, a `credit` naming the rights holder and permission, and
 `placeholder: false`.
 
-To add the official portrait, set `portraitRecord` in `records.ts` with the image path,
-dimensions, credit and permission reference. The hero then renders it as the LCP image with
-`priority` loading; until then a typographic monogram composition is shown. A generated
-likeness or a stock photograph of another person must never be used.
+The official portrait is registered as `portraitRecord` in `records.ts` (original photograph
+plus a background-removed cut-out in `public/images/portrait/`, with credit and permission
+reference). To replace it, swap the files and update the dimensions. Setting the record to
+`null` falls back to a typographic monogram composition. A generated likeness or a stock
+photograph of another person must never be used.
 
 ## Design system
 
@@ -153,6 +155,12 @@ Tokens are defined once in `src/app/globals.css` (`@theme` and `:root`): colours
 navy `#071426`, executive blue `#0B1F3A`, royal `#315FEA`, champagne gold `#C9AD78`, ivory
 `#F5F3EE`, plus AA-safe text variants `gold-ink` and `royal-soft`), type families, radii,
 shadows, gradients, spacing and motion durations/easings.
+
+Signature components: a floating pill header; a mesh-gradient hero with the cut-out portrait
+on a glowing ring and floating glass cards; a credentials bar; an "at a glance" bento grid whose
+figures are all computed from the content records; a horizontal, scroll-snapped journey rail;
+gradient-border cards with a cursor spotlight (`.card-glow`, `.card-soft`); pill eyebrows; and
+gold gradient display text.
 
 Type: Manrope (headings), DM Serif Display (editorial accents), Inter (body), Noto Sans
 Kannada (Kannada, with taller line heights and no letter-spacing or uppercase transforms).

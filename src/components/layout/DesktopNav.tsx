@@ -12,7 +12,7 @@ export function DesktopNav() {
 
   return (
     <nav aria-label={t('primary')} className="hidden lg:block">
-      <ul className="flex items-center gap-7 xl:gap-9">
+      <ul className="flex items-center gap-6 xl:gap-8">
         {desktopNav.map((entry) => {
           if ('group' in entry) return <NavDropdown key={entry.group} entry={entry} />;
           const current = isActivePath(pathname, entry.href);

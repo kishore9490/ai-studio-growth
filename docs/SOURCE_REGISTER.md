@@ -11,6 +11,7 @@ ids from it.
 | 2026-10-29 | Build (automated) | Attempted to fetch `rguhs.ac.in/vcprofile.html` and `/vcdesk.html` | **Blocked** by the build environment's network policy. Pages were not read. |
 | 2026-10-29 | Build (automated) | Web search for corroboration | Search results only (not sufficient evidence). Corroborated: RGUHS VC title; credential list; KIMS roles including Vice Principal 2017–2023 and HoD Surgery 2022–2023; KIMS = Kempegowda Institute of Medical Sciences. Not corroborated: the Mysore MBBS institution. |
 | 2026-10-29 | Build (automated) | Attempted to open `medicaldialogues.in` and `nmc.org.in` | **Blocked** by network policy. Not read. |
+| 2026-10-29 | Client representative | Supplied the official portrait and approved its use on the website | Portrait registered in `records.ts`; background removed for the hero cut-out |
 | _pending_ | _Editor_ | Re-read the live official profile and confirm every fact below | Required before publication |
 
 Because the official pages could not be opened during the build, **all facts were transcribed

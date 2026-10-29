@@ -16,7 +16,7 @@ export function EmptyState({
   items?: ReactNode[];
 }) {
   return (
-    <div className="card relative overflow-hidden p-8 sm:p-12">
+    <div className="card-soft relative overflow-hidden p-8 sm:p-12">
       <div aria-hidden className="bg-grid-light pointer-events-none absolute inset-0" />
       <div className="relative grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
         <div>

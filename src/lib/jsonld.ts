@@ -1,16 +1,17 @@
 import type { Locale } from '@/i18n/routing';
-import { getCopy } from '@/content';
+import { getCopy, getPortrait } from '@/content';
 import { officialLinks } from '@/content/sources';
 import { absoluteUrl, localizedPath } from './metadata';
 
 /**
  * Structured data. Only verified-source fields are used: name, job title,
- * employer and the official profile link. No social accounts, contact
- * details, honours or images are asserted.
+ * employer, the official profile link and the client-approved portrait.
+ * No social accounts, contact details or honours are asserted.
  */
 export function personJsonLd(locale: Locale) {
   const copy = getCopy(locale).profile;
   const personId = `${absoluteUrl('/')}#person`;
+  const portrait = getPortrait();
   return {
     '@context': 'https://schema.org',
     '@graph': [
@@ -21,6 +22,7 @@ export function personJsonLd(locale: Locale) {
         alternateName: locale === 'kn' ? getCopy('en').profile.name : undefined,
         honorificPrefix: locale === 'kn' ? 'ಡಾ.' : 'Dr.',
         jobTitle: copy.role,
+        image: portrait ? absoluteUrl(portrait.src) : undefined,
         worksFor: {
           '@type': 'CollegeOrUniversity',
           name: copy.institution,

@@ -52,7 +52,8 @@ describe('SEO', () => {
     const person = graph[0] as Record<string, unknown>;
     expect(person.name).toBe('Dr. Bhagavan B.C.');
     expect(person.jobTitle).toBe('Vice Chancellor');
-    expect(Object.keys(person)).not.toEqual(expect.arrayContaining(['email', 'telephone', 'award', 'image']));
+    expect(person.image).toBe('http://localhost:3000/images/portrait/dr-bhagavan-bc.jpg');
+    for (const key of ['email', 'telephone', 'award', 'sameAsSocial']) expect(person[key]).toBeUndefined();
   });
 
   it('escapes "<" when serialising JSON-LD', () => {

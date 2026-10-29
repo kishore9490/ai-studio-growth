@@ -42,7 +42,7 @@ export default async function ContactPage({ params }: LocaleParams) {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="card card-interactive group flex h-full flex-col p-7 sm:p-8"
+                  className="card-soft group flex h-full flex-col p-7 sm:p-8"
                 >
                   <Icon aria-hidden className="h-7 w-7 text-gold-ink" strokeWidth={1.5} />
                   <span className="mt-6 font-display text-xl font-semibold">{title}</span>

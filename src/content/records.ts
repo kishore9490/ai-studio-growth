@@ -106,11 +106,19 @@ const publicationRecords: Publication[] = [];
 const mediaRecords: MediaItem[] = [];
 
 /**
- * Official portrait. Null until an authorised image and its usage permission
- * are supplied. A typographic composition is rendered instead — never a
- * generated likeness or a stock photograph.
+ * Official portrait, supplied and approved for this website by the client's
+ * representative. The cut-out is the same photograph with its plain white
+ * background removed (no other retouching). Set to null to fall back to the
+ * typographic composition — never a generated likeness or a stock photograph.
  */
-const portraitRecord: Portrait = null;
+const portraitRecord: Portrait = {
+  src: '/images/portrait/dr-bhagavan-bc.jpg',
+  width: 1600,
+  height: 1584,
+  cutout: { src: '/images/portrait/dr-bhagavan-bc-cutout.png', width: 1200, height: 1150 },
+  credit: 'Portrait supplied by the client for this website',
+  permissionReference: 'Supplied and approved for use by the client representative on 2026-10-29',
+};
 
 export const qualifications = z.array(qualificationSchema).parse(qualificationRecords) as (Qualification & {
   id: QualificationId;

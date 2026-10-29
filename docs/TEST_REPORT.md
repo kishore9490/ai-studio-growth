@@ -13,7 +13,7 @@ All results below were actually run on this date. Nothing is reported as passing
 | ESLint (Next core-web-vitals + TS) | `npm run lint` | ✅ 0 errors, 0 warnings |
 | Unit, component and content tests | `npm test` | ✅ 32 passed, 5 skipped (the opt-in publication gate) |
 | Production build | `npm run build` | ✅ 16 pages + OG images statically generated |
-| End-to-end (Playwright, Chromium) | `npm run test:e2e` | ✅ 61 passed (58 desktop project, 3 mobile project) |
+| End-to-end (Playwright, Chromium) | `npm run test:e2e` | ✅ 63 passed (60 desktop project, 3 mobile project) — re-run after the redesign |
 | Automated accessibility (axe, WCAG 2.0/2.1/2.2 A+AA tags) | part of e2e | ✅ 0 violations on all 16 pages |
 | Publication gate | `npm run content:gate` | ❌ **Fails by design**: facts unverified, sources unchecked, production config not set |
 | Lighthouse | see below | Measured on all 16 pages |
@@ -100,6 +100,21 @@ deliberately marked `noindex`.
 | ~1.1 s of style/layout on Kannada home: scroll reveals forced a layout each (layout thrashing) | Reveal now uses the observer's first callback; blurred orb replaced by a gradient → ~0.3 s |
 | Latin text in Kannada pages fell back to a generic font | Removed the generic family from the Kannada stack so Latin falls through to Inter |
 | `@axe-core/playwright` pulled a mismatched `playwright-core` | Pinned via npm `overrides` |
+
+## Redesign re-check (portrait + modern design, 2026-10-29)
+
+After adding the approved portrait and the redesigned components, typecheck, lint (0
+warnings), 32 unit tests and 63 e2e tests (incl. axe on all 16 pages, overflow at 7 widths)
+all pass. New e2e tests: the portrait renders with alt text in both languages; the journey
+rail's next/previous buttons scroll it; the header pill turns solid on scroll.
+
+Lighthouse after the redesign (mobile / desktop, local production server):
+
+| Page | Perf (mobile / desktop) | A11y | Best practices | LCP mobile | CLS |
+| --- | --- | --- | --- | --- | --- |
+| /en | 98 / 100 | 100 | 100 | 1.1 s | 0 |
+| /kn | 94 / 100 | 100 | 100 | 1.2 s | 0 |
+| /en/about | 99 / 98 | 100 | 100 | 0.9 s | 0 |
 
 ## Not tested / known limitations
 

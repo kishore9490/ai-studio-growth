@@ -68,7 +68,7 @@ export default async function ExperiencePage({ params }: LocaleParams) {
                   >
                     <Icon aria-hidden className="h-4 w-4" />
                   </span>
-                  <article className={cn('col-start-2 mt-3 md:col-start-3 md:row-start-1 md:mt-0', current && 'card p-6 shadow-soft')}>
+                  <article className={cn('col-start-2 mt-3 md:col-start-3 md:row-start-1 md:mt-0', current && 'card-soft p-6')}>
                     {current && (
                       <p className="mb-2 text-xs font-semibold tracking-[0.14em] text-gold-ink uppercase">{t('currentRole')}</p>
                     )}
