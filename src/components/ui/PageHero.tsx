@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { cn } from '@/lib/cn';
-import { Parallax } from '@/components/motion/Parallax';
+import { Scene3D } from '@/components/three/Scene3D';
 
 const delay = (s: number) => ({ '--enter-delay': `${s}s` }) as CSSProperties;
 
@@ -21,13 +21,10 @@ export function PageHero({
   return (
     <section className="surface-mesh relative isolate overflow-hidden pt-[calc(var(--header-height)+clamp(3rem,8vw,6rem))] pb-[clamp(3.5rem,8vw,6.5rem)]">
       <div aria-hidden className="bg-grid enter-bg absolute inset-0 -z-10" />
-      <Parallax offset={50} className="pointer-events-none absolute -top-24 right-[-10%] -z-10 hidden md:block">
-        <svg aria-hidden viewBox="0 0 600 600" className="h-[34rem] w-[34rem] text-white/10">
-          <circle cx="300" cy="300" r="299" fill="none" stroke="currentColor" />
-          <circle cx="300" cy="300" r="220" fill="none" stroke="currentColor" strokeDasharray="2 8" />
-          <circle cx="300" cy="300" r="140" fill="none" stroke="var(--color-gold)" strokeOpacity="0.3" />
-        </svg>
-      </Parallax>
+      <div aria-hidden className="absolute inset-0 -z-10 opacity-45 lg:opacity-100">
+        <Scene3D kind="network" anchorId={aside ? 'page-hero-aside' : 'page-hero-anchor'} />
+      </div>
+      {!aside && <div id="page-hero-anchor" aria-hidden className="pointer-events-none absolute top-[calc(var(--header-height)+1rem)] right-0 h-[24rem] w-full lg:right-[3%] lg:h-[30rem] lg:w-[36%]" />}
       <div className={cn('container-x', aside && 'grid items-center gap-12 lg:grid-cols-12')}>
         <div className={cn(aside && 'lg:col-span-7')}>
           <p className="pill enter-up">{eyebrow}</p>
@@ -39,7 +36,11 @@ export function PageHero({
             {lead}
           </p>
         </div>
-        {aside && <div className="lg:col-span-5">{aside}</div>}
+        {aside && (
+          <div id="page-hero-aside" className="lg:col-span-5">
+            {aside}
+          </div>
+        )}
         {children}
       </div>
     </section>

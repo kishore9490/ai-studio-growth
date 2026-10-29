@@ -539,6 +539,11 @@
 
   /* Gradient-border card for dark surfaces, with a cursor spotlight
      (--mx/--my are set by the Spotlight component). */
+  .card-glow,
+  .card-soft {
+    transition-duration: 0.18s !important;
+  }
+
   .card-glow {
     position: relative;
     border-radius: var(--radius-xl);
@@ -589,9 +594,24 @@
       box-shadow var(--duration-base) var(--ease-out-expo);
   }
 
+  .card-soft::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(380px circle at var(--mx, 50%) var(--my, -20%), rgb(49 95 234 / 0.07), transparent 60%);
+    opacity: 0;
+    transition: opacity var(--duration-base) var(--ease-standard);
+  }
+
   .card-soft:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-lift);
+  }
+
+  .card-soft:hover::after {
+    opacity: 1;
   }
 
   .card-soft:hover .card-icon {
@@ -665,7 +685,7 @@
 @keyframes enter-up {
   from {
     opacity: 0;
-    transform: translate3d(0, 18px, 0);
+    transform: perspective(900px) rotateX(38deg) translate3d(0, 26px, 0);
   }
   to {
     opacity: 1;
@@ -730,7 +750,8 @@
   }
 
   .enter-up {
-    animation: enter-up 0.8s var(--ease-out-expo) both;
+    transform-origin: 50% 100%;
+    animation: enter-up 1s var(--ease-out-expo) both;
     animation-delay: var(--enter-delay, 0s);
   }
 
@@ -741,12 +762,15 @@
 
   [data-reveal='hidden'] {
     opacity: 0;
-    transform: translate3d(0, 28px, 0);
+    /* Pushed back in depth so a tilted block never projects wider than the viewport. */
+    transform: perspective(1200px) translate3d(0, 48px, -160px) rotateX(10deg) scale(0.95);
+    transform-origin: 50% 0%;
   }
 
   [data-reveal='shown'] {
     opacity: 1;
     transform: none;
+    transform-origin: 50% 0%;
     transition:
       opacity var(--duration-reveal) var(--ease-out-expo),
       transform var(--duration-reveal) var(--ease-out-expo);

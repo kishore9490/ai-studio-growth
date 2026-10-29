@@ -4,18 +4,8 @@ import { getTranslations } from 'next-intl/server';
 import type { CSSProperties } from 'react';
 import type { Locale } from '@/i18n/routing';
 import { getCopy, getPortrait, getQualifications } from '@/content';
+import { portraitMask } from '@/lib/portrait';
 import { Parallax } from '@/components/motion/Parallax';
-
-/** Fades the photograph's cropped shoulders and lower edge into the stage. */
-const portraitMask: CSSProperties = {
-  maskImage:
-    'linear-gradient(to bottom, #000 72%, transparent 98%), linear-gradient(to right, transparent 0%, #000 16%, #000 84%, transparent 100%)',
-  maskComposite: 'intersect',
-  WebkitMaskImage:
-    'linear-gradient(to bottom, #000 72%, transparent 98%), linear-gradient(to right, transparent 0%, #000 16%, #000 84%, transparent 100%)',
-  WebkitMaskComposite: 'source-in',
-};
-
 /**
  * Hero portrait stage: the approved cut-out photograph rising from a glowing
  * ring, with floating glass cards. Falls back to a typographic monogram when
@@ -28,18 +18,10 @@ export async function PortraitComposition({ locale }: { locale: Locale }) {
   const frcs = getQualifications(locale).filter((q) => q.credential.startsWith('FRCS'));
 
   return (
-    <div className="relative mx-auto aspect-[1/1.02] w-full max-w-[19rem] sm:max-w-[28rem] lg:max-w-none">
-      {/* Glow and rings */}
+    <div id="hero-portrait" className="relative mx-auto aspect-[1/1.02] w-full max-w-[19rem] sm:max-w-[28rem] lg:max-w-none">
+      {/* Glow behind the portrait (the 3D helix renders behind this) */}
       <div aria-hidden className="absolute inset-x-[4%] top-[6%] bottom-[4%]">
-        <div className="absolute inset-0 rounded-full bg-[radial-gradient(closest-side,rgb(49_95_234/0.55),rgb(49_95_234/0.12)_60%,transparent)]" />
-        <Parallax offset={18} className="absolute inset-0">
-          <svg viewBox="0 0 400 400" className="h-full w-full">
-            <circle cx="200" cy="200" r="196" fill="none" stroke="var(--color-gold)" strokeOpacity="0.55" strokeWidth="1" />
-            <circle cx="200" cy="200" r="176" fill="none" stroke="white" strokeOpacity="0.12" strokeDasharray="2 7" />
-            <circle cx="200" cy="4" r="4" fill="var(--color-gold)" />
-            <circle cx="22" cy="270" r="3" fill="white" fillOpacity="0.6" />
-          </svg>
-        </Parallax>
+        <div className="absolute inset-0 rounded-full bg-[radial-gradient(closest-side,rgb(49_95_234/0.45),rgb(49_95_234/0.1)_60%,transparent)]" />
       </div>
 
       {portrait ? (

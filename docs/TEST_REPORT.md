@@ -116,6 +116,31 @@ Lighthouse after the redesign (mobile / desktop, local production server):
 | /kn | 94 / 100 | 100 | 100 | 1.2 s | 0 |
 | /en/about | 99 / 98 | 100 | 100 | 0.9 s | 0 |
 
+## 3D upgrade re-check (2026-10-29)
+
+Added WebGL scenes (three.js 0.186.1), 3D tilt cards and 3D scroll/heading reveals.
+
+- Typecheck, lint (0 warnings), 32 unit tests and **66 e2e tests** pass. New e2e tests: scenes
+  render after the first interaction on `/en` and `/kn/vision`; a still frame renders with
+  reduced motion; the scene stays off on software-only renderers. The 3D tests passed three
+  repeated runs.
+- Found and fixed: the 3D pre-reveal tilt made tall sections project a few pixels past the
+  viewport (caught by the overflow test) — now pushed back in depth and scaled.
+- Lighthouse, first attempt with 3D starting at page idle: mobile Performance fell to **70**
+  (TBT ~5 s; the lab runs WebGL on a software GPU under 4× CPU throttling). After deferring 3D
+  to the first interaction, skipping software renderers and capping phones at ~30 fps:
+
+| Page (mobile) | Perf | A11y | Best practices | LCP | CLS | TBT |
+| --- | --- | --- | --- | --- | --- | --- |
+| /en | 97 | 100 | 100 | 1.1 s | 0 | 200 ms |
+| /kn | 93 | 100 | 100 | 1.2 s | 0 | 310 ms |
+| /en/vision | 94 | 100 | 100 | 1.1 s | 0 | 300 ms |
+| /en/about | 97 | 100 | 100 | 0.9 s | 0 | 200 ms |
+
+Lighthouse does not interact with the page, so these scores reflect load performance, not
+the cost of the running scene. That cost was checked on Chromium's software renderer only;
+**test the 3D on real phones (especially low-end Android) before launch.**
+
 ## Not tested / known limitations
 
 - **Official sources could not be opened** from the build environment (network policy blocked

@@ -179,10 +179,11 @@ export async function JourneySection({ locale }: { locale: Locale }) {
           const Icon = m.kind === 'education' ? GraduationCap : Briefcase;
           const current = m.year === null;
           return (
-            <li
+            <Spotlight
+              as="li"
               key={m.id}
               className={cn(
-                'relative flex min-h-[17rem] flex-col rounded-[var(--radius-xl)] p-7 transition-transform duration-500 hover:-translate-y-1',
+                'relative flex min-h-[17rem] flex-col rounded-[var(--radius-xl)] p-7 transition-transform duration-200',
                 current ? 'surface-mesh text-white shadow-lift' : 'card-soft',
               )}
             >
@@ -202,7 +203,7 @@ export async function JourneySection({ locale }: { locale: Locale }) {
               </p>
               <h3 className="mt-2 font-display text-lg leading-snug font-semibold">{m.title}</h3>
               {m.subtitle && <p className={cn('mt-1 text-sm', current ? 'text-mist' : 'text-ink-muted')}>{m.subtitle}</p>}
-            </li>
+            </Spotlight>
           );
         })}
       </Rail>
@@ -237,12 +238,14 @@ export async function FocusSection({ locale }: { locale: Locale }) {
           {areas.map((area, index) => {
             const Icon = focusIcons[area.id];
             return (
-              <Reveal as="li" key={area.id} delay={(index % 3) * 90} className="card-soft p-7 sm:p-8">
-                <span className="icon-tile">
-                  <Icon aria-hidden className="card-icon h-6 w-6 text-navy transition-transform duration-300" strokeWidth={1.6} />
-                </span>
-                <h3 className="mt-6 font-display text-xl font-semibold">{area.title}</h3>
-                <p className="mt-3 text-ink-muted">{area.body}</p>
+              <Reveal as="li" key={area.id} delay={(index % 3) * 90}>
+                <Spotlight className="card-soft h-full p-7 sm:p-8">
+                  <span className="icon-tile">
+                    <Icon aria-hidden className="card-icon h-6 w-6 text-navy transition-transform duration-300" strokeWidth={1.6} />
+                  </span>
+                  <h3 className="mt-6 font-display text-xl font-semibold">{area.title}</h3>
+                  <p className="mt-3 text-ink-muted">{area.body}</p>
+                </Spotlight>
               </Reveal>
             );
           })}

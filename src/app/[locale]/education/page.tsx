@@ -2,6 +2,7 @@ import { GraduationCap } from 'lucide-react';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { Reveal } from '@/components/motion/Reveal';
+import { Spotlight } from '@/components/motion/Spotlight';
 import { PageHero } from '@/components/ui/PageHero';
 import { SourceNote } from '@/components/ui/SourceNote';
 import { getQualifications } from '@/content';
@@ -35,7 +36,7 @@ export default async function EducationPage({ params }: LocaleParams) {
                     <GraduationCap aria-hidden className="h-5 w-5" />
                   </span>
                 </div>
-                <article className="card-soft mt-0 flex flex-1 flex-col p-7 lg:mt-6">
+                <Spotlight as="article" className="card-soft mt-0 flex flex-1 flex-col p-7 lg:mt-6">
                   <p className="font-serif text-4xl leading-none text-ink">
                     {q.startYear ? (
                       <>
@@ -60,7 +61,7 @@ export default async function EducationPage({ params }: LocaleParams) {
                   <p className="mt-auto pt-5 text-sm font-medium text-ink">
                     {q.institution ?? <span className="font-normal text-ink-muted italic">{t('institutionNotStated')}</span>}
                   </p>
-                </article>
+                </Spotlight>
               </Reveal>
             ))}
           </ol>

@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react';
 import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { getCopy, getQualifications } from '@/content';
+import { Scene3D } from '@/components/three/Scene3D';
 import { PortraitComposition } from './PortraitComposition';
 
 const delay = (s: number) => ({ '--enter-delay': `${s}s` }) as CSSProperties;
@@ -16,6 +17,9 @@ export async function Hero({ locale }: { locale: Locale }) {
   return (
     <section aria-labelledby="hero-title" className="surface-mesh relative isolate overflow-hidden pt-[calc(var(--header-height)+1.5rem)]">
       <div aria-hidden className="bg-grid enter-bg absolute inset-0 -z-10" />
+      <div aria-hidden className="absolute inset-0 -z-10">
+        <Scene3D kind="helix" anchorId="hero-portrait" />
+      </div>
 
       <div className="container-x grid items-center gap-10 pb-10 lg:min-h-[calc(100svh-var(--header-height)-7rem)] lg:grid-cols-12 lg:gap-8 lg:pb-14">
         <div className="lg:col-span-7">

@@ -119,3 +119,36 @@ test('journey rail scrolls with its buttons', async ({ page }) => {
   await expect.poll(() => rail.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
   await expect(previous).toBeEnabled();
 });
+
+test('3D scenes render after the first interaction', async ({ page }) => {
+  // The test browser has no GPU; allow its software renderer for this check.
+  await page.addInitScript(() => (window.__allowSoftware3D = true));
+  for (const path of ['/en', '/kn/vision']) {
+    await page.goto(path, { waitUntil: 'networkidle' });
+    const canvas = page.locator('canvas').first();
+    await expect(canvas).toHaveClass(/opacity-0/);
+    await page.mouse.move(400, 300);
+    await page.mouse.move(500, 320);
+    await expect(canvas).toHaveAttribute('aria-hidden', 'true');
+    // The scene fades in after its first rendered frame.
+    await expect(canvas).toHaveClass(/opacity-100/, { timeout: 10_000 });
+  }
+});
+
+test('3D scene stays off on software-only renderers', async ({ page }) => {
+  await page.goto('/en', { waitUntil: 'networkidle' });
+  await page.mouse.move(400, 300);
+  await page.waitForTimeout(2500);
+  await expect(page.locator('canvas').first()).toHaveClass(/opacity-0/);
+});
+
+test('3D scene renders a still frame with reduced motion', async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: 'reduce' });
+  const page = await context.newPage();
+  await page.addInitScript(() => (window.__allowSoftware3D = true));
+  await page.goto('/en', { waitUntil: 'networkidle' });
+  await page.mouse.move(400, 300);
+  await page.mouse.move(500, 320);
+  await expect(page.locator('canvas').first()).toHaveClass(/opacity-100/, { timeout: 10_000 });
+  await context.close();
+});

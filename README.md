@@ -26,9 +26,11 @@ logos or seals, and does not imply endorsement.
 - **Next.js 16** (App Router, Turbopack) with **React 19**, **TypeScript** in strict mode
 - **next-intl 4** for locale routing (`/en`, `/kn`), messages and metadata
 - **Tailwind CSS 4** with CSS-first design tokens in `src/app/globals.css`
+- **three.js** for the WebGL 3D scenes (hand-written shaders, no extra 3D framework), loaded
+  on demand after the visitor's first interaction
 - **Motion** (`motion/react`) for the mobile menu, lightbox and parallax; CSS for entrance
-  animations; a small IntersectionObserver component for scroll reveals. GSAP is not used:
-  nothing on the site needs scroll-scrubbed timelines.
+  animations and 3D scroll reveals; a small IntersectionObserver component for reveals. GSAP
+  is not used: nothing on the site needs scroll-scrubbed timelines.
 - **Zod 4** validates every content record and the environment at build time
 - **lucide-react** icons
 - **Vitest** + React Testing Library (unit and component), **Playwright** + axe-core (end-to-end,
@@ -167,6 +169,22 @@ Kannada (Kannada, with taller line heights and no letter-spacing or uppercase tr
 
 The "BC" monogram is a proposed design element for this personal site only. It is not an
 official logo and is kept separate from any university branding.
+
+### 3D
+
+- **Home hero:** a rotating DNA double helix of glowing gold and blue particles, with an orbiting
+  halo and a star field, placed behind the cut-out portrait (`src/components/three/engine.ts`).
+- **Inner page headers:** a rotating "knowledge network" globe (nodes on a sphere joined to their
+  nearest neighbours; seven gold nodes nod to the seven stated priorities) with an orbit ring.
+- Both respond to the pointer and to scrolling. Cards tilt in 3D toward the cursor
+  (`Spotlight`), headlines rise with a 3D rotation, and sections rotate into place on scroll.
+- **Performance and accessibility safeguards:** three.js is downloaded only after the first
+  scroll, touch, mouse move or key press, so it never competes with page load; rendering pauses
+  when the scene is off-screen or the tab is hidden; phones render at ~30 fps with a lower pixel
+  ratio and no antialiasing; software-only WebGL (no GPU) is skipped; reduced motion gets one
+  still frame; without WebGL the CSS backdrop remains. The canvas is `aria-hidden`.
+- Automated browsers have no GPU, so e2e tests opt in to the software renderer with
+  `window.__allowSoftware3D = true`.
 
 ### Motion
 

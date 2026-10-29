@@ -10,6 +10,7 @@ import { aboutSectionIds } from '@/content/ids';
 import { officialLinks } from '@/content/sources';
 import { personJsonLd, profilePageJsonLd, serializeJsonLd } from '@/lib/jsonld';
 import { buildPageMetadata } from '@/lib/metadata';
+import { portraitMask } from '@/lib/portrait';
 import { resolveLocale, type LocaleParams } from '@/lib/page';
 
 export async function generateMetadata({ params }: LocaleParams): Promise<Metadata> {
@@ -38,19 +39,19 @@ export default async function AboutPage({ params }: LocaleParams) {
         lead={t('lead')}
         aside={
           portrait && (
-            <div className="enter-mask relative mx-auto w-full max-w-sm">
-              <div aria-hidden className="absolute -inset-10 rounded-full bg-[radial-gradient(closest-side,rgb(49_95_234/0.45),transparent)]" />
-              <div className="relative overflow-hidden rounded-[2rem] border border-white/15 shadow-glow">
-                <Image
-                  src={portrait.src}
-                  alt={profile.name}
-                  width={portrait.width}
-                  height={portrait.height}
-                  priority
-                  sizes="(min-width: 1024px) 24rem, 90vw"
-                  className="aspect-[4/4.6] w-full object-cover object-top"
-                />
-              </div>
+            <div className="enter-portrait relative mx-auto aspect-[1/1.02] w-full max-w-sm">
+              <div aria-hidden className="absolute inset-[6%] rounded-full bg-[radial-gradient(closest-side,rgb(49_95_234/0.5),transparent)]" />
+              <div aria-hidden className="absolute inset-[4%] rounded-full border border-gold/40" />
+              <Image
+                src={portrait.cutout.src}
+                alt={profile.name}
+                width={portrait.cutout.width}
+                height={portrait.cutout.height}
+                priority
+                sizes="(min-width: 1024px) 24rem, 90vw"
+                className="absolute bottom-0 left-1/2 h-full w-auto max-w-none -translate-x-1/2 object-contain object-bottom"
+                style={portraitMask}
+              />
             </div>
           )
         }
