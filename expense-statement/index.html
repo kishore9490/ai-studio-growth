@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Expense Statement Generator</title>
+  <meta name="description" content="Prepare professional IT services & expense statements as PDF.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230B1F3A'/%3E%3Crect x='8' y='22' width='16' height='2' fill='%232F6FDE'/%3E%3Crect x='8' y='9' width='16' height='2.4' rx='1' fill='white'/%3E%3Crect x='8' y='14.5' width='11' height='2.4' rx='1' fill='white'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <div>
+        <div class="brand-title">Expense Statement</div>
+        <div class="brand-sub">IT services &amp; expense reports for clients</div>
+      </div>
+    </div>
+    <nav class="actions" aria-label="Statement actions">
+      <button type="button" class="btn ghost" id="btnNew" title="Start a new statement">New</button>
+      <button type="button" class="btn ghost" id="btnOpen" title="Open a saved statement">Open</button>
+      <button type="button" class="btn ghost" id="btnSave" title="Save this statement in this browser">Save</button>
+      <span class="divider" aria-hidden="true"></span>
+      <button type="button" class="btn outline" id="btnPrint">Print</button>
+      <button type="button" class="btn primary" id="btnDownload">Download PDF</button>
+    </nav>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="View">
+    <button type="button" role="tab" class="tab active" data-view="edit" aria-selected="true">Edit</button>
+    <button type="button" role="tab" class="tab" data-view="preview" aria-selected="false">Preview</button>
+  </div>
+
+  <main class="layout" data-view="edit">
+    <section class="editor" aria-label="Statement editor">
+      <form id="form" autocomplete="off" onsubmit="return false">
+        <div class="card">
+          <div class="card-head">
+            <h2>Statement details</h2>
+            <span class="status" id="saveStatus"></span>
+          </div>
+          <div class="grid">
+            <label class="field span-2">
+              <span>Prepared by (company name)</span>
+              <input name="preparedBy" type="text" placeholder="Your company name">
+            </label>
+            <label class="field">
+              <span>Customer company name</span>
+              <input name="customer" type="text" placeholder="Customer company">
+            </label>
+            <label class="field">
+              <span>Contact person</span>
+              <input name="contact" type="text" placeholder="Full name">
+            </label>
+            <label class="field">
+              <span>Statement date</span>
+              <input name="date" type="date">
+            </label>
+            <label class="field">
+              <span>Currency</span>
+              <select name="currency" id="currency"></select>
+            </label>
+            <label class="field span-2">
+              <span>Statement reference</span>
+              <div class="input-group">
+                <input name="reference" type="text" placeholder="Auto-generated">
+                <button type="button" class="btn ghost small" id="btnRef" title="Regenerate reference from company, customer and date">Auto</button>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Expense items</h2>
+            <span class="hint">Leave unit cost blank for pending items</span>
+          </div>
+          <div id="items" class="items"></div>
+          <button type="button" class="btn add" id="btnAdd">+ Add expense item</button>
+
+          <div class="totals" id="totals" aria-live="polite"></div>
+        </div>
+
+        <details class="card more" id="moreCard">
+          <summary><h2>Branding, notes &amp; disclaimers</h2><span class="chev" aria-hidden="true"></span></summary>
+          <div class="grid">
+            <div class="field span-2">
+              <span>Company logo <em>(optional, PNG/JPG/SVG)</em></span>
+              <div class="logo-row">
+                <div class="logo-preview" id="logoPreview">No logo – monogram used</div>
+                <label class="btn outline small file-btn">Upload<input type="file" id="logoInput" accept="image/*" hidden></label>
+                <button type="button" class="btn ghost small" id="logoRemove">Remove</button>
+              </div>
+            </div>
+            <label class="field span-2">
+              <span>Company details <em>(optional – address, email, phone)</em></span>
+              <textarea name="companyDetails" rows="2" placeholder="e.g. Hyderabad, India · accounts@example.com"></textarea>
+            </label>
+            <label class="field span-2">
+              <span>Notes &amp; disclaimers <em>(one per line)</em></span>
+              <textarea name="disclaimer" rows="6"></textarea>
+            </label>
+            <div class="span-2 row-end">
+              <button type="button" class="btn ghost small" id="btnResetNotes">Restore default disclaimers</button>
+            </div>
+          </div>
+        </details>
+
+        <div class="footer-tools">
+          <button type="button" class="btn ghost small" id="btnSample">Load sample (SABVEX)</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="preview" aria-label="Live PDF preview">
+      <div class="preview-bar">
+        <span class="live-dot" aria-hidden="true"></span>
+        <span>Live PDF preview</span>
+        <span class="page-count" id="pageCount"></span>
+      </div>
+      <div class="pages" id="pages">
+        <div class="preview-empty">Generating preview…</div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="openDialog" class="dialog">
+    <form method="dialog" class="dialog-inner">
+      <div class="dialog-head">
+        <h2>Saved statements</h2>
+        <button class="icon-btn" value="close" aria-label="Close">&times;</button>
+      </div>
+      <p class="dialog-note">Statements are stored privately in this browser. Export a file to move them between devices.</p>
+      <ul class="saved-list" id="savedList"></ul>
+      <div class="dialog-foot">
+        <button type="button" class="btn outline small" id="btnExport">Export current (.json)</button>
+        <label class="btn outline small file-btn">Import .json<input type="file" id="importInput" accept="application/json,.json" hidden></label>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <template id="itemTpl">
+    <div class="item">
+      <div class="item-top">
+        <span class="item-no"></span>
+        <input class="i-desc" data-k="description" type="text" placeholder="Description, e.g. Microsoft 365 E3" aria-label="Description">
+        <div class="item-tools">
+          <button type="button" class="icon-btn" data-act="up" title="Move up" aria-label="Move up">&#8593;</button>
+          <button type="button" class="icon-btn" data-act="down" title="Move down" aria-label="Move down">&#8595;</button>
+          <button type="button" class="icon-btn danger" data-act="remove" title="Remove item" aria-label="Remove item">&times;</button>
+        </div>
+      </div>
+      <div class="item-grid">
+        <label class="mini"><span>Qty</span><input data-k="quantity" type="text" inputmode="decimal" placeholder="1"></label>
+        <label class="mini"><span>Unit cost</span><input data-k="unitCost" type="text" inputmode="decimal" placeholder="Pending"></label>
+        <label class="mini"><span>Billing</span><select data-k="frequency"></select></label>
+        <div class="mini amount"><span>Amount</span><output class="i-amount"></output></div>
+      </div>
+      <input class="i-notes" data-k="notes" type="text" placeholder="Notes (optional) – e.g. source invoice, conversion details" aria-label="Notes">
+    </div>
+  </template>
+
+  <script src="vendor/jspdf.umd.min.js"></script>
+  <script src="vendor/jspdf.plugin.autotable.min.js"></script>
+  <script src="vendor/pdf.min.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/statement-pdf.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
