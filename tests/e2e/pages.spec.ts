@@ -103,6 +103,14 @@ test('structured data is valid JSON with verified fields only', async ({ page })
   expect(person.telephone).toBeUndefined();
 });
 
+test('footer shows the copyright notice in both languages', async ({ page }) => {
+  const year = new Date().getFullYear();
+  await page.goto('/en');
+  await expect(page.locator('footer')).toContainText(`© ${year} Dr. Bhagavan B.C. All rights reserved.`);
+  await page.goto('/kn');
+  await expect(page.locator('footer')).toContainText('ಎಲ್ಲ ಹಕ್ಕುಗಳನ್ನು ಕಾಯ್ದಿರಿಸಲಾಗಿದೆ');
+});
+
 test('security headers are present', async ({ request }) => {
   const res = await request.get('/en');
   const headers = res.headers();
